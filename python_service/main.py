@@ -1,6 +1,5 @@
 from solscan_defs import callHoldersApi, callMetaApi, getUserTxData
 import csv
-import pandas
 
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 IGNORED_WALLETS = [];
@@ -12,7 +11,7 @@ def update_ledgers():
 
     for holder in holderData['data']:
         holderAddress = holder['address']
-        if holderAddress in IGNORED_WALLETS: return 0;
+        if holderAddress in IGNORED_WALLETS: return 0; # need to move to avoid issues
 
         # Deal with this when service is reliable and mostly feature complete
         ######### Check if user ledger exists, 
@@ -34,11 +33,15 @@ def update_ledgers():
                 if (row[9] == TOKEN_ADDRESS):
                     userIscTxs.append(row)
         
-        with open('./csv_files/user_ledgers/' + holderAddress + '.csv', 'w') as out:
+        with open('./csv_files/user_ledgers/' + holderAddress + '.csv', 'w', newline='') as out:
+            fieldnames = ['txHash', 'blockTimeUnix', 'changeType', 'ISC Balance Change', 'prevBalance', 'newBalance'];
+            writer = csv.DictWriter(out, fieldnames=fieldnames)
+            writer.writeheader()
             for row in userIscTxs:
-                out.write("\n")
-                for item in row:
-                    out.write(item + ",")
+                writer.writerow({'txHash':row[0], 'blockTimeUnix':row[1], 'changeType':row[5], 'ISC Balance Change':row[6], 'prevBalance':row[7], 'newBalance':row[8],})
+                # out.write("\n")
+                # """  for item in row:
+                #     out.write(item + ",")  """
             
 
         ## Create holder tx object and remove unwanted tx's

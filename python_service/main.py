@@ -1,26 +1,90 @@
-from solscan_defs import callHoldersApi, callMetaApi, getUserTxData
+from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
 import csv
+import json
+import time
 
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
-IGNORED_WALLETS = [];
+IGNORED_WALLETS = []; 
+## Place IGNORED_WALLETS in separate file that can be fetched
+## when checking uncirculating supply
 
 
 def update_isc_supply():
-    ## Call txs for token account and update ledger with mint tx hash, timestamp, amount, total amount
-    return 0
+    print("checking and updating total supply...")
+    IscMeta = callMetaApi()
+    metaSupply = IscMeta['supply']; 
+
+    mints = query_mint_authority();
+    fetchSupply = 0
+    for mint in mints:
+        fetchSupply += int(mint["amountMinted"])
+    print("before: " +str(fetchSupply) + "  Now: " + metaSupply)
+
+    with open("./data/supply.json", "r") as supplyFile:
+        try: 
+            oldMints = json.load(supplyFile)
+        except:
+            oldMints =[]
+        #Compare txhashes, if they don't match, add mint to oldMints
+        for mint in mints:
+            exists = False
+            for oldMint in oldMints:
+                if (mint['txHash'] == oldMint['txHash']):
+                    exists = True
+            if exists == False:
+                print("found new mint! Adding to list....")
+                oldMints.append(mint)
+
+        ## Overwrite old file with new file 
+        with open('./data/supply.json', 'w') as supplyFile:
+            json.dump(oldMints, supplyFile)
+
+        print("total supply updated successfully!")
+        return metaSupply
+
+
+## Test with "2CdgwT798DG4WE6hp4PHGTG2HR5LMpyGbJNudsjdTJyw" 
+# or other address(es) from files names of csv_files/user_txs in IGNORES_WALLETS row 7
 
 def update_circulating_supply():
-    ## To Figure Out
-    return 1
+    totalSupply = update_isc_supply();
 
-def update_user_ledgers():
+    print("updating holder balances...")
+    #update_user_transactions() ## unfinished and takes too long for testing
+    print("holder balances updated successfully!")
+
+    print("checking and updating circulating supply...")
+
+    ## Get Ignored Wallets balances
+    ignoredAmount = 0.00
+
+    for walletAddress in IGNORED_WALLETS:
+        with open('./csv_files/user_txs/'+ walletAddress +'.csv', 'r') as ignoredWalletCsv:
+            reader = csv.reader(ignoredWalletCsv, delimiter=",")
+            rows = list(reader)
+            ignoredAmount += float(rows[1][5])
+
+    circulatingSupply = float(totalSupply) - ignoredAmount
+
+    print("Total Supply:  " + str(totalSupply))
+    print("Uncirculating Supply:  " + str(ignoredAmount))
+    print("Circulating Supply:  " + str(circulatingSupply))
+
+    print("circulating supply updated successfully!")
+    ## Return circulating supply
+    return circulatingSupply
+
+def update_user_transactions():
     holderData = callHoldersApi()
     iscMeta = callMetaApi()
 
 
     for holder in holderData['data']:
-        holderAddress = holder['address']
-        if holderAddress in IGNORED_WALLETS: return 0; # need to move to avoid issues
+        holderTokenAddress = holder['address'];
+        holderWalletAddress = holder['owner'];
+
+        # !!! NEED IGNORED_WALLETS LEDGER TO UPDATE CIRCULATING SUPPLY >> IMPLEMENT IN IGT CALC FN INSTEAD
+        #if holderTokenAddress in IGNORED_WALLETS: return 0; # need to move to avoid issues
 
         # Deal with this when service is reliable and mostly feature complete
         ######### Check if user ledger exists, 
@@ -30,7 +94,7 @@ def update_user_ledgers():
         ######### really necessary or just record all txs after latest recorded tx since
         ######### we would have already scanned the whole list of users last time? 
 
-        holderTxsCsv = getUserTxData(holderAddress)
+        holderTxsCsv = getUserTxData(holderTokenAddress)
         with open('./csv_files/tempTx.csv', 'w') as out:
             out.write(holderTxsCsv)
 
@@ -45,7 +109,7 @@ def update_user_ledgers():
         
         ## then remove unwanted data and write/update permanent user ledger (only csv w/data for now, ledger later)
         ## Need to add Owner Account to send IGT! Use ISC token account for TX history! 
-        with open('./csv_files/user_txs/' + holderAddress + '.csv', 'w', newline='') as out:
+        with open('./csv_files/user_txs/' + holderTokenAddress + '.csv', 'w', newline='') as out:
             fieldnames = ['txHash', 'blockTimeUnix', 'changeType', 'ISC Balance Change', 'prevBalance', 'newBalance'];
             writer = csv.DictWriter(out, fieldnames=fieldnames)
             writer.writeheader()
@@ -59,11 +123,10 @@ def update_user_ledgers():
         # Then we can calculate their share of holdings over time to
         #calculate their share of IGT tokens
 
-update_isc_supply();
 update_circulating_supply();
-update_user_ledgers();
+#update_user_transactions();
 
-def calculate_igt_share():
+def calculate_igt_share(holderAddress):
     ## Calculate user holdings over time since start of quarterly epoch.
      # Should 1 second or 1 day be equal to 1 point? To simplify math?
 
@@ -127,10 +190,23 @@ def calculate_igt_share():
 
             the users total IGT share is now = user points / total points * IGT supply = 5,619.272562 IGT
 
+ 
+
     """
     #The quarter ends by starting new holder ledgers after a set time or when a mint/send Tx is detected by IGT Token Account 
     #Thought, do holder points carry over to next quarter or reset?
-    return 4
+    ledger = []
+
+    with open('./csv_files/user_txs/' + holderAddress + '.csv', newline='') as csvfile:
+        txreader = csv.reader(csvfile, delimiter=",")
+        for row in txreader:
+            ledger.append(row)
+
+    for tx in ledger:
+        print(tx)
+        print("\n")
+
+#calculate_igt_share("3NVE5ebLSnv7Gt7dQHeC7eBBorrM1xL8uc6iMypWx2j8");
 
 
 

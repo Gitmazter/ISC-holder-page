@@ -1,53 +1,58 @@
 from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
+from update_holder_services import compare_ids, get_holders
+from pymongo import MongoClient
+from settings import DB_KEY, IGNORED_WALLETS
 import csv
-import json
-import time
 
+
+# GLOBAL VARS
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
-IGNORED_WALLETS = []; 
+
+MONGO_DB_URL = "mongodb+srv://Phil:" + str(DB_KEY()) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
+CLUSTER = MongoClient(MONGO_DB_URL)
+DB = CLUSTER["ISC"]
+
+#Collections
+all_holders_collection = DB["all_holders"]
+transactions_collection =  DB["all_transactions"]
+holder_ledgers_collection = DB["holder_ledgers"]
+igt_share_collection = DB["igt_shares"]
+supply_collection = DB["supply"]
+
 ## Place IGNORED_WALLETS in separate file that can be fetched
 ## when checking uncirculating supply
 
-
-def update_isc_supply():
+def update_coin_supply():
     print("checking and updating total supply...")
-    IscMeta = callMetaApi()
-    metaSupply = IscMeta['supply']; 
 
-    mints = query_mint_authority();
-    fetchSupply = 0
-    for mint in mints:
-        fetchSupply += int(mint["amountMinted"])
-    print("before: " +str(fetchSupply) + "  Now: " + metaSupply)
+    coin_meta_data = callMetaApi()
+    metaSupply = coin_meta_data['supply']; 
 
-    with open("./data/supply.json", "r") as supplyFile:
-        try: 
-            oldMints = json.load(supplyFile)
-        except:
-            oldMints =[]
-        #Compare txhashes, if they don't match, add mint to oldMints
-        for mint in mints:
-            exists = False
-            for oldMint in oldMints:
-                if (mint['txHash'] == oldMint['txHash']):
-                    exists = True
-            if exists == False:
-                print("found new mint! Adding to list....")
-                oldMints.append(mint)
+    bc_mints = query_mint_authority();
+    db_mints = supply_collection.find({})
 
-        ## Overwrite old file with new file 
-        with open('./data/supply.json', 'w') as supplyFile:
-            json.dump(oldMints, supplyFile)
+    fetchSupply = 0;
+    for bc_mint in bc_mints:
+        fetchSupply += int(bc_mint["amountMinted"])
 
-        print("total supply updated successfully!")
-        return metaSupply
+    print("before: " +str(fetchSupply) + "  Now: " + metaSupply) ##  THERE IS BURN!!
+
+    for bc_mint in bc_mints:
+        if compare_ids(bc_mint['_id'], db_mints) == False:
+            supply_collection.insert_one(bc_mint)
+            print("found new mint! Adding to list....")
+
+    print("total supply updated successfully!")
+    return metaSupply
+
+update_coin_supply();
 
 
 ## Test with "2CdgwT798DG4WE6hp4PHGTG2HR5LMpyGbJNudsjdTJyw" 
-# or other address(es) from files names of csv_files/user_txs in IGNORES_WALLETS row 7
+# or other address(es) from files names of csv_files/user_txs in .env IGNORED_WALLETS
 
 def update_circulating_supply():
-    totalSupply = update_isc_supply();
+    totalSupply = update_coin_supply();
 
     print("updating holder balances...")
     #update_user_transactions() ## unfinished and takes too long for testing
@@ -75,11 +80,11 @@ def update_circulating_supply():
     return circulatingSupply
 
 def update_user_transactions():
-    holderData = callHoldersApi()
+
     iscMeta = callMetaApi()
 
 
-    for holder in holderData['data']:
+    for holder in holder_data['data']:
         holderTokenAddress = holder['address'];
         holderWalletAddress = holder['owner'];
 
@@ -123,8 +128,86 @@ def update_user_transactions():
         # Then we can calculate their share of holdings over time to
         #calculate their share of IGT tokens
 
-update_circulating_supply();
+#update_circulating_supply();
 #update_user_transactions();
+
+
+
+
+
+
+
+
+
+
+
+def update_holders():
+    current_holders = all_holders_collection.find({})
+    total_holders = callHoldersApi(0)['total']
+
+    holders = get_holders(total_holders)
+
+    for holder in holders: 
+        exists = compare_ids(holder['owner'], current_holders)
+
+        if exists == False:
+            holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'],  "amount": holder["amount"]}
+            all_holders_collection.insert_one(holder_vson)
+ 
+#update_holders()  Fully working with Mongo DB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def calculate_igt_share(holderAddress):
     ## Calculate user holdings over time since start of quarterly epoch.

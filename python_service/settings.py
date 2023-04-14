@@ -3,6 +3,12 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 
 
+def DB_UN ():
+    dotenv_path = join(dirname(__file__), '.env')
+    load_dotenv(dotenv_path)
+    DATABASE_USERNAME = os.environ.get("MONGO_DB_UN")
+    return DATABASE_USERNAME
+
 def DB_KEY ():
     dotenv_path = join(dirname(__file__), '.env')
     load_dotenv(dotenv_path)

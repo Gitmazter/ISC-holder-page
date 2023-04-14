@@ -1,14 +1,14 @@
 from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
 from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
-from settings import DB_KEY
+from settings import DB_KEY, DB_UN
 import csv
 
 
 # GLOBAL VARS
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 
-MONGO_DB_URL = "mongodb+srv://Phil:" + str(DB_KEY()) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
+MONGO_DB_URL = "mongodb+srv://"+ str(DB_UN()) + ":" + str(DB_KEY()) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
 CLUSTER = MongoClient(MONGO_DB_URL)
 DB = CLUSTER["ISC"]
 
@@ -98,8 +98,14 @@ def update_holders():
             holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
             all_holders_collection.insert_one(holder_vson)
     print("successfully updated holders")
- 
 
+def main():
+    update_holders()
+    #update_user_transactions() ## Finished, takes long time to update
+    update_circulating_supply()
+    #calculate_igt_share()
+
+main()
 
 
 
@@ -236,13 +242,6 @@ def calculate_igt_share(holderAddress):
 
 
 
-def main():
-    update_holders()
-    #update_user_transactions() ## Finished, takes long time to update
-    update_circulating_supply()
-    #calculate_igt_share()
-
-main()
 
 
 

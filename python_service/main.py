@@ -1,14 +1,14 @@
 from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
 from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
-from settings import DB_KEY, DB_UN
+from settings import GET_KEY
 import csv
 
 
 # GLOBAL VARS
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 
-MONGO_DB_URL = "mongodb+srv://"+ str(DB_UN()) + ":" + str(DB_KEY()) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
+MONGO_DB_URL = "mongodb+srv://"+ str(GET_KEY("MONGO_DB_UN")) + ":" + str(GET_KEY("MONGO_DB_KEY")) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
 CLUSTER = MongoClient(MONGO_DB_URL)
 DB = CLUSTER["ISC"]
 

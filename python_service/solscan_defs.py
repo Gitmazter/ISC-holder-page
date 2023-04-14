@@ -1,10 +1,10 @@
 import requests
 import json
 import time 
-from settings import SOLSCAN_API_KEY
+from settings import GET_KEY
 
 ISC_MINT_AUTHORITY = "3XM6WqYLx5gKpRNwnCcUrBmJAhRHx3imktwEvbRwXavZ" 
-headers = {"token":str(SOLSCAN_API_KEY())}  
+headers = {"token":str(GET_KEY("SOLSCAN_API_KEY"))}  
 
 def callHoldersApi(offset): 
     URI = "https://public-api.solscan.io/token/holders?tokenAddress=J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD&limit=50&offset=" + str(offset)

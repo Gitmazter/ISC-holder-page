@@ -28,6 +28,10 @@ def getUserTxData(address):
 
     return resCsvStr #This is the CSV data for an Accounts Token Txs
 
+
+
+
+
 def query_mint_authority():
     mints = []
     URI = "https://public-api.solscan.io/account/transactions?account=3XM6WqYLx5gKpRNwnCcUrBmJAhRHx3imktwEvbRwXavZ&limit=50"  
@@ -41,8 +45,6 @@ def query_mint_authority():
             mints.append(mintTxData)
     
     return mints
-
-
 
 def get_tx_data(txHash):
     URI ="https://public-api.solscan.io/transaction/" + txHash

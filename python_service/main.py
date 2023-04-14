@@ -1,7 +1,7 @@
 from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
-from update_holder_services import compare_ids, get_holders
+from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
-from settings import DB_KEY, IGNORED_WALLETS
+from settings import DB_KEY
 import csv
 
 
@@ -15,12 +15,10 @@ DB = CLUSTER["ISC"]
 #Collections
 all_holders_collection = DB["all_holders"]
 transactions_collection =  DB["all_transactions"]
-holder_ledgers_collection = DB["holder_ledgers"]
-igt_share_collection = DB["igt_shares"]
 supply_collection = DB["supply"]
 
 ## Place IGNORED_WALLETS in separate file that can be fetched
-## when checking uncirculating supply
+## when checking non-circulating supply
 
 def update_coin_supply():
     print("checking and updating total supply...")
@@ -39,35 +37,23 @@ def update_coin_supply():
 
     for bc_mint in bc_mints:
         if compare_ids(bc_mint['_id'], db_mints) == False:
-            supply_collection.insert_one(bc_mint)
             print("found new mint! Adding to list....")
+            supply_collection.insert_one(bc_mint)
 
     print("total supply updated successfully!")
     return metaSupply
 
-update_coin_supply();
-
-
-## Test with "2CdgwT798DG4WE6hp4PHGTG2HR5LMpyGbJNudsjdTJyw" 
-# or other address(es) from files names of csv_files/user_txs in .env IGNORED_WALLETS
-
 def update_circulating_supply():
     totalSupply = update_coin_supply();
-
-    print("updating holder balances...")
-    #update_user_transactions() ## unfinished and takes too long for testing
-    print("holder balances updated successfully!")
-
     print("checking and updating circulating supply...")
+    holders = all_holders_collection.find({})
 
     ## Get Ignored Wallets balances
     ignoredAmount = 0.00
 
-    for walletAddress in IGNORED_WALLETS:
-        with open('./csv_files/user_txs/'+ walletAddress +'.csv', 'r') as ignoredWalletCsv:
-            reader = csv.reader(ignoredWalletCsv, delimiter=",")
-            rows = list(reader)
-            ignoredAmount += float(rows[1][5])
+    for holder in holders:
+        if (holder["ignored"] == True):
+            ignoredAmount += holder["amount"]
 
     circulatingSupply = float(totalSupply) - ignoredAmount
 
@@ -76,72 +62,30 @@ def update_circulating_supply():
     print("Circulating Supply:  " + str(circulatingSupply))
 
     print("circulating supply updated successfully!")
-    ## Return circulating supply
     return circulatingSupply
 
 def update_user_transactions():
+    print("updating user transactions... (this may take a while)")
 
-    iscMeta = callMetaApi()
+    current_holders = all_holders_collection.find({})
 
-
-    for holder in holder_data['data']:
-        holderTokenAddress = holder['address'];
-        holderWalletAddress = holder['owner'];
-
-        # !!! NEED IGNORED_WALLETS LEDGER TO UPDATE CIRCULATING SUPPLY >> IMPLEMENT IN IGT CALC FN INSTEAD
-        #if holderTokenAddress in IGNORED_WALLETS: return 0; # need to move to avoid issues
-
-        # Deal with this when service is reliable and mostly feature complete
-        ######### Check if user ledger exists, 
-        ######### if it does, only request transactions after latest recorded tx 
-        ######### else, record all txs
-
-        ######### really necessary or just record all txs after latest recorded tx since
-        ######### we would have already scanned the whole list of users last time? 
+    for holder in current_holders:
+        holderTokenAddress = holder["token_wallet_address"]
+        holderId = holder["_id"];
 
         holderTxsCsv = getUserTxData(holderTokenAddress)
         with open('./csv_files/tempTx.csv', 'w') as out:
             out.write(holderTxsCsv)
 
-        userIscTxs = []
+        myquery = { "_id": holderId}
+        newvalues = { "$set": { "transactions": check_txs() } }
 
-        ## Create holder tx object and remove unwanted tx's VVV
-        with open('./csv_files/tempTx.csv', newline='') as csvfile:
-            txreader = csv.reader(csvfile, delimiter=",")
-            for row in txreader:
-                if (row[9] == TOKEN_ADDRESS):
-                    userIscTxs.append(row)
-        
-        ## then remove unwanted data and write/update permanent user ledger (only csv w/data for now, ledger later)
-        ## Need to add Owner Account to send IGT! Use ISC token account for TX history! 
-        with open('./csv_files/user_txs/' + holderTokenAddress + '.csv', 'w', newline='') as out:
-            fieldnames = ['txHash', 'blockTimeUnix', 'changeType', 'ISC Balance Change', 'prevBalance', 'newBalance'];
-            writer = csv.DictWriter(out, fieldnames=fieldnames)
-            writer.writeheader()
-            for row in userIscTxs:
-                writer.writerow({'txHash':row[0], 'blockTimeUnix':row[1], 'changeType':row[5], 'ISC Balance Change':row[6], 'prevBalance':row[7], 'newBalance':row[8],})
-
-        # We now have the holders TX data for all token ISC transactions: VV Bussin!
-        # Now we need to read it and make a ledger for their ISC holdings: Lessgo
-
-
-        # Then we can calculate their share of holdings over time to
-        #calculate their share of IGT tokens
-
-#update_circulating_supply();
-#update_user_transactions();
-
-
-
-
-
-
-
-
-
+        all_holders_collection.update_one(myquery, newvalues)
+        print("successfully updated user transactions")
 
 
 def update_holders():
+    print("updating holders...")
     current_holders = all_holders_collection.find({})
     total_holders = callHoldersApi(0)['total']
 
@@ -150,11 +94,11 @@ def update_holders():
     for holder in holders: 
         exists = compare_ids(holder['owner'], current_holders)
 
-        if exists == False:
-            holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'],  "amount": holder["amount"]}
+        if exists == False: 
+            holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
             all_holders_collection.insert_one(holder_vson)
+    print("successfully updated holders")
  
-#update_holders()  Fully working with Mongo DB
 
 
 
@@ -212,6 +156,7 @@ def update_holders():
 def calculate_igt_share(holderAddress):
     ## Calculate user holdings over time since start of quarterly epoch.
      # Should 1 second or 1 day be equal to 1 point? To simplify math?
+     # Ignore wallets with holder["ignored"] = true
 
     """ 
     Method: 
@@ -289,7 +234,16 @@ def calculate_igt_share(holderAddress):
         print(tx)
         print("\n")
 
-#calculate_igt_share("3NVE5ebLSnv7Gt7dQHeC7eBBorrM1xL8uc6iMypWx2j8");
+
+
+def main():
+    update_holders()
+    #update_user_transactions() ## Finished, takes long time to update
+    update_circulating_supply()
+    #calculate_igt_share()
+
+main()
+
 
 
 

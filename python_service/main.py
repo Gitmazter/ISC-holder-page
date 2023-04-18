@@ -2,8 +2,8 @@ from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_
 from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
 from settings import GET_KEY
-import csv
-
+from classes import Event
+from igt_defs import isc_weight, calculate_igt_share
 
 # GLOBAL VARS
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
@@ -19,6 +19,7 @@ supply_collection = DB["supply"]
 
 ## Place IGNORED_WALLETS in separate file that can be fetched
 ## when checking non-circulating supply
+
 
 def update_coin_supply():
     print("checking and updating total supply...")
@@ -43,6 +44,7 @@ def update_coin_supply():
     print("total supply updated successfully!")
     return metaSupply
 
+
 def update_circulating_supply():
     totalSupply = update_coin_supply();
     print("checking and updating circulating supply...")
@@ -63,6 +65,7 @@ def update_circulating_supply():
 
     print("circulating supply updated successfully!")
     return circulatingSupply
+
 
 def update_user_transactions():
     print("updating user transactions... (this may take a while)")
@@ -95,45 +98,53 @@ def update_holders():
         exists = compare_ids(holder['owner'], current_holders)
 
         if exists == False: 
-            holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
-            all_holders_collection.insert_one(holder_vson)
+            try:
+                holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
+                all_holders_collection.insert_one(holder_vson)
+            except:
+                print("one slipped through, no worries i caught him for u")
     print("successfully updated holders")
 
 
 
-def update_igt_shares():
+def update_igt_shares(circulating_supply):
     print("Calculating User IGT Shares")
     
     holders = all_holders_collection.find({})
-    mints = supply_collection.find({})
+    supply_cursor_object = supply_collection.find({})
+    
 
-    # for holder in holders:
-    #     myquery = { "_id": holder["_id"]}
-    #     newvalues = { "$set": { "igtShare": calculate_igt_share(holder, mints) } }
+    supplyArr = []
+    for supply in supply_cursor_object:
+        supplyArr.append(supply)
+    supplyArr.reverse()
 
-    #     all_holders_collection.update_one(myquery, newvalues)
+    total_supply = 0
+    supplyEventArr = []
+
+    for event in supplyArr:
+        total_supply += int(event["amountMinted"])
+        supplyEventArr.append(Event(event['timeStamp'], total_supply, 0))
+    
+    weightArr = isc_weight(total_supply, supplyEventArr)
+
+    i = 0
+    for holder in holders:
+        if (i < 2):
+            calculate_igt_share(holder['transactions'], supplyEventArr, weightArr)
+        i += 1
+        # myquery = { "_id": holder["_id"]}
+        # newvalues = { "$set": { "igtShare": calculate_igt_share(holder, supplyArr) } }
+
+        # all_holders_collection.update_one(myquery, newvalues)
 
     print("All IGT Shares Updated")
-
-
-
-
-def calculate_igt_share(holder):
-    igt_share = 0.00
-
-    ##Calc Here
-
-    return igt_share
-
-
-
+ 
 def main():
-    #update_holders()
-    #update_user_transactions() ## Finished, takes long time to update
-    #update_circulating_supply()
-    #calculate_igt_share()
-    update_igt_shares()
-
+    update_holders()
+    update_user_transactions() ## Finished, takes long time to update
+    circulating_supply = update_circulating_supply()
+    update_igt_shares(circulating_supply)
 main()
 
 

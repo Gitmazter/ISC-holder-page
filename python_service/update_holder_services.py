@@ -2,12 +2,16 @@ from solscan_defs import callHoldersApi
 import csv
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 
-# checks if holder matches on already in database
+# checks if holder matches or already in database
 def compare_ids(id, dict_array_with_ids):
+    bool = False
     for current_dict in dict_array_with_ids:
-        if id == current_dict['_id']:
-            return True
-    return False
+        if str(current_dict['_id']) == str(id):
+            print('user Exists')
+            bool = True
+    print("new user")
+    if bool == True: return True
+    else: return False
 
 # gets all holders from solscan
 def get_holders(total_holders):

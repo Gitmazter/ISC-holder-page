@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from settings import GET_KEY
 from classes import Event
 from igt_defs import isc_weight, calculate_igt_share
+import time
 
 # GLOBAL VARS
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
@@ -20,6 +21,20 @@ supply_collection = DB["supply"]
 ## Place IGNORED_WALLETS in separate file that can be fetched
 ## when checking non-circulating supply
 
+def update_holders():
+    print("updating holders...")
+    known_holders = all_holders_collection.find({})
+    total_number_of_holders = callHoldersApi(0)['total']
+    holder_list = get_holders(total_number_of_holders)
+
+    for holder in holder_list:
+        if compare_ids(holder['owner'], known_holders) == None: 
+            try:
+                holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
+                all_holders_collection.insert_one(holder_vson)
+            except:
+                print("duplicate caught")
+    print("successfully updated holders")
 
 def update_coin_supply():
     print("checking and updating total supply...")
@@ -74,7 +89,7 @@ def update_user_transactions():
 
     for holder in current_holders:
         holderTokenAddress = holder["token_wallet_address"]
-        holderId = holder["_id"];
+        holderId = holder["_id"]
 
         holderTxsCsv = getUserTxData(holderTokenAddress)
         with open('./csv_files/tempTx.csv', 'w') as out:
@@ -83,27 +98,17 @@ def update_user_transactions():
         myquery = { "_id": holderId}
         newvalues = { "$set": { "transactions": check_txs() } }
 
-        all_holders_collection.update_one(myquery, newvalues)
-        print("successfully updated user transactions")
+        try:
+            all_holders_collection.update_one(myquery, newvalues)
+            print('user updated')
+        except:
+            print('error while updating user txs')
+        time.sleep(0.2) # To account for Solscan limits
+    print("successfully updated user transactions")
 
 
-def update_holders():
-    print("updating holders...")
-    current_holders = all_holders_collection.find({})
-    total_holders = callHoldersApi(0)['total']
 
-    holders = get_holders(total_holders)
 
-    for holder in holders: 
-        exists = compare_ids(holder['owner'], current_holders)
-
-        if exists == False: 
-            try:
-                holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
-                all_holders_collection.insert_one(holder_vson)
-            except:
-                print("one slipped through, no worries i caught him for u")
-    print("successfully updated holders")
 
 
 
@@ -113,7 +118,6 @@ def update_igt_shares(circulating_supply):
     holders = all_holders_collection.find({})
     supply_cursor_object = supply_collection.find({})
     
-
     supplyArr = []
     for supply in supply_cursor_object:
         supplyArr.append(supply)
@@ -128,21 +132,18 @@ def update_igt_shares(circulating_supply):
     
     weightArr = isc_weight(total_supply, supplyEventArr)
 
-    i = 0
     for holder in holders:
-        if (i < 2):
-            calculate_igt_share(holder['transactions'], supplyEventArr, weightArr)
-        i += 1
+        calculate_igt_share(holder['transactions'], supplyEventArr, weightArr)
         # myquery = { "_id": holder["_id"]}
         # newvalues = { "$set": { "igtShare": calculate_igt_share(holder, supplyArr) } }
 
         # all_holders_collection.update_one(myquery, newvalues)
 
     print("All IGT Shares Updated")
- 
+
 def main():
-    update_holders()
-    update_user_transactions() ## Finished, takes long time to update
+    #update_holders()
+    #update_user_transactions() ## Finished, takes long time to update
     circulating_supply = update_circulating_supply()
     update_igt_shares(circulating_supply)
 main()

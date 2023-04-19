@@ -27,16 +27,15 @@ def calculate_igt_share(holderTxs, supplyArr, weightArr):
             supply_chk(event['timeStamp'], supplyArr),
             event['newBalance']
             ))
-        print('new User')
         for event in holderEventArray:
             i = 0
             while i + 1 < len(weightArr):
-                print("range condition met")
+                #print("range condition met")
                 if int(event.timeStamp) > weightArr[i]["timeStamp"] and int(event.timeStamp) < weightArr[i+1]['timeStamp']:
-                    print("event time is greater than weight epoch and is less than the time of the next epoch")
+                    #print("event time is greater than weight epoch and is less than the time of the next epoch")
                     igt_share += get_epoch_igt_points(event, weightArr[i]['weight'], weightArr[i+1]['timeStamp'])
                 i+=1;
-            print("user event took place after latest mint")
+            #print("user event took place after latest mint")
             igt_share += get_epoch_igt_points(event, weightArr[i]['weight'], time.time())
     print("this is the Share    " + str(igt_share))
     

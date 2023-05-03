@@ -23,17 +23,22 @@ supply_collection = DB["supply"]
 
 def update_holders():
     print("updating holders...")
-    known_holders = all_holders_collection.find({})
+    fetched_known_holders = all_holders_collection.find({})
+    known_holders = []
+    for fetched_known_holder in fetched_known_holders:
+        known_holders.append(fetched_known_holder)
+
     total_number_of_holders = callHoldersApi(0)['total']
     holder_list = get_holders(total_number_of_holders)
 
     for holder in holder_list:
-        if compare_ids(holder['owner'], known_holders) == None: 
+        if compare_ids(holder['owner'], known_holders) == True: 
             try:
-                holder_vson = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
-                all_holders_collection.insert_one(holder_vson)
+                holder_json = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
+                all_holders_collection.insert_one(holder_json)
             except:
                 print("duplicate caught")
+
     print("successfully updated holders")
 
 def update_coin_supply():
@@ -142,10 +147,10 @@ def update_igt_shares(circulating_supply):
     print("All IGT Shares Updated")
 
 def main():
-    #update_holders()
+    update_holders()
     #update_user_transactions() ## Finished, takes long time to update
-    circulating_supply = update_circulating_supply()
-    update_igt_shares(circulating_supply)
+    #circulating_supply = update_circulating_supply()
+    #update_igt_shares(circulating_supply)
 main()
 
 

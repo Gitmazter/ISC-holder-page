@@ -4,18 +4,21 @@ TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 
 # checks if holder matches or already in database
 def compare_ids(id, holder_arr):
-    for x in holder_arr:
-        if x['_id'] == id:
-            bool = True
-            return bool
+    new_user = True
+    for holder in holder_arr:
+        if id == holder["_id"]:
+            new_user = False
+    return new_user
 
 
 # gets all holders from solscan
 def get_holders(total_holders):
+        print("total holders:" + str(total_holders))
         holders = []
         offset = 0
 
-        while offset < total_holders: 
+        while offset < total_holders:
+            print("offset " + str(offset)) 
             for holder in callHoldersApi(offset)['data']:
                 holders.append(holder)
             offset += 50

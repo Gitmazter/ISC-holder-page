@@ -28,7 +28,8 @@ def getUserTxData(address):
 
     return resCsvStr #This is the CSV data for an Accounts Token Txs
 
-
+def getAllTxs(offset):
+    ## Get all txs with offset 
 
 
 

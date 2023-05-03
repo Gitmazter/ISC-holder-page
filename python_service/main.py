@@ -111,10 +111,8 @@ def update_user_transactions():
         time.sleep(0.2) # To account for Solscan limits
     print("successfully updated user transactions")
 
-
-
-
-
+def update_all_txs():
+    ## Update all txs to new mongoDB collection and implement into update users and update transactions defs
 
 
 def update_igt_shares(circulating_supply):
@@ -147,10 +145,10 @@ def update_igt_shares(circulating_supply):
     print("All IGT Shares Updated")
 
 def main():
-    update_holders()
-    #update_user_transactions() ## Finished, takes long time to update
-    #circulating_supply = update_circulating_supply()
-    #update_igt_shares(circulating_supply)
+    #update_holders()
+    update_user_transactions() ## Finished, takes long time to update
+    circulating_supply = update_circulating_supply()
+    update_igt_shares(circulating_supply)
 main()
 
 

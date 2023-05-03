@@ -48,7 +48,10 @@ def update_coin_supply():
     metaSupply = coin_meta_data['supply']; 
 
     bc_mints = query_mint_authority();
-    db_mints = supply_collection.find({})
+    fetched_db_mints = supply_collection.find({})
+    db_mints = []
+    for fetched_db_mint in fetched_db_mints:
+        db_mints.append(fetched_db_mint)
 
     fetchSupply = 0;
     for bc_mint in bc_mints:
@@ -57,7 +60,11 @@ def update_coin_supply():
     print("before: " +str(fetchSupply) + "  Now: " + metaSupply) ##  THERE IS BURN!!
 
     for bc_mint in bc_mints:
-        if compare_ids(bc_mint['_id'], db_mints) == False:
+        new_mint = True
+        for db_mint in db_mints:
+            if bc_mint["_id"] == db_mint["_id"]:
+                new_mint = False
+        if new_mint == True:
             print("found new mint! Adding to list....")
             supply_collection.insert_one(bc_mint)
 
@@ -68,7 +75,10 @@ def update_coin_supply():
 def update_circulating_supply():
     totalSupply = update_coin_supply();
     print("checking and updating circulating supply...")
-    holders = all_holders_collection.find({})
+    fetched_holders = all_holders_collection.find({})
+    holders = []
+    for fetched_holder in fetched_holders:
+        holders.append(fetched_holder)
 
     ## Get Ignored Wallets balances
     ignoredAmount = 0.00
@@ -112,6 +122,7 @@ def update_user_transactions():
     print("successfully updated user transactions")
 
 def update_all_txs():
+    print("hello")
     ## Update all txs to new mongoDB collection and implement into update users and update transactions defs
 
 
@@ -146,7 +157,7 @@ def update_igt_shares(circulating_supply):
 
 def main():
     #update_holders()
-    update_user_transactions() ## Finished, takes long time to update
+    #update_user_transactions() ## Finished, takes long time to update
     circulating_supply = update_circulating_supply()
     update_igt_shares(circulating_supply)
 main()

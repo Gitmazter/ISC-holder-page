@@ -3,7 +3,7 @@ from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
 from settings import GET_KEY
 from classes import Event
-from igt_defs import isc_weight, calculate_igt_share
+from igt_defs import isc_weight, calculate_igt_points, get_total_igt_points
 import time
 
 # GLOBAL VARS
@@ -128,43 +128,35 @@ def update_all_txs():
 
 
 def update_igt_shares(circulating_supply):
-    print("Calculating User IGT Shares")
-    
     holders = all_holders_collection.find({})
     supply_cursor_object = supply_collection.find({})
     
-    supplyArr = []
+    supply_arr = []
     for supply in supply_cursor_object:
-        supplyArr.append(supply)
-    supplyArr.reverse()
+        supply_arr.append(supply)
+    supply_arr.reverse()
 
-    total_supply = 0
-    supplyEventArr = []
+    weight_time_array = isc_weight(circulating_supply, supply_arr)
+    total_igt_points = get_total_igt_points(weight_time_array)
+    total_shares = 0.00
 
-    for event in supplyArr:
-        total_supply += int(event["amountMinted"])
-        supplyEventArr.append(Event(event['timeStamp'], total_supply, 0))
-    
-    weight_time_array = isc_weight(circulating_supply, supplyEventArr)
-
-    total_points = 0
-
-    print("total supply: " + str(total_supply))
     for holder in holders:
-        share = calculate_igt_share(holder['transactions'], supplyEventArr, weight_time_array)
-        #time.sleep(2)
-        total_points += share
-        print("these are the users igt points: " + str(share))
+        share = calculate_igt_points(holder['transactions'], weight_time_array)
+        total_shares += share
+
+        # total_points += share
+        # print("these are the users igt points: " + str(share))
         # myquery = { "_id": holder["_id"]}
         # newvalues = { "$set": { "igtShare": calculate_igt_share(holder, supplyArr) } }
-
-        # all_holders_collection.update_one(myquery, newvalues)
-    print(total_points)
-    print("All IGT Shares Updated")
+    print(total_shares)
+    print(total_igt_points)
+    #     # all_holders_collection.update_one(myquery, newvalues)
+    # print(total_points)
+    # print("All IGT Shares Updated")
 
 def main():
-    #update_holders()
-    #update_user_transactions() ## Finished, takes long time to update
+    update_holders()
+    update_user_transactions() ## Finished, takes long time to update
     circulating_supply = update_circulating_supply()
     update_igt_shares(circulating_supply)
 main()

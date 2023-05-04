@@ -23,15 +23,16 @@ supply_collection = DB["supply"]
 
 def update_holders():
     print("updating holders...")
-    fetched_known_holders = all_holders_collection.find({})
+
+    known_holders_cursor_object = all_holders_collection.find({})
     known_holders = []
-    for fetched_known_holder in fetched_known_holders:
-        known_holders.append(fetched_known_holder)
+    for known_holder_cursor_object in known_holders_cursor_object:
+        known_holders.append(known_holder_cursor_object)
 
     total_number_of_holders = callHoldersApi(0)['total']
-    holder_list = get_holders(total_number_of_holders)
+    all_holders_list = get_holders(total_number_of_holders)
 
-    for holder in holder_list:
+    for holder in all_holders_list:
         if compare_ids(holder['owner'], known_holders) == True: 
             try:
                 holder_json = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
@@ -144,15 +145,21 @@ def update_igt_shares(circulating_supply):
         total_supply += int(event["amountMinted"])
         supplyEventArr.append(Event(event['timeStamp'], total_supply, 0))
     
-    weightArr = isc_weight(total_supply, supplyEventArr)
+    weight_time_array = isc_weight(circulating_supply, supplyEventArr)
 
+    total_points = 0
+
+    print("total supply: " + str(total_supply))
     for holder in holders:
-        calculate_igt_share(holder['transactions'], supplyEventArr, weightArr)
+        share = calculate_igt_share(holder['transactions'], supplyEventArr, weight_time_array)
+        #time.sleep(2)
+        total_points += share
+        print("these are the users igt points: " + str(share))
         # myquery = { "_id": holder["_id"]}
         # newvalues = { "$set": { "igtShare": calculate_igt_share(holder, supplyArr) } }
 
         # all_holders_collection.update_one(myquery, newvalues)
-
+    print(total_points)
     print("All IGT Shares Updated")
 
 def main():

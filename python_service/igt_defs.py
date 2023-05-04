@@ -2,11 +2,11 @@ from classes import Event
 import time
 
 def isc_weight(total_supply, supplyArr):
-    weightArr = []
+    weight_time_array = []
     for event in supplyArr:
-        weightObject = {"timeStamp": event.timeStamp, "weight":(total_supply/event.supply)}
-        weightArr.append(weightObject)
-    return weightArr
+        weight_time_object = { "timeStamp": event.timeStamp, "weight":( total_supply/event.supply ) }
+        weight_time_array.append(weight_time_object)
+    return weight_time_array
 
 def supply_chk(eventTime, supplyArr):
     i = 0;
@@ -16,7 +16,7 @@ def supply_chk(eventTime, supplyArr):
         i += 1
     return supplyArr[i].supply
 
-def calculate_igt_share(holderTxs, supplyArr, weightArr):
+def calculate_igt_share(holderTxs, supplyArr, weight_time_array):
     igt_share = 0.00
     holderTxs.reverse()
 
@@ -27,24 +27,23 @@ def calculate_igt_share(holderTxs, supplyArr, weightArr):
             supply_chk(event['timeStamp'], supplyArr),
             event['newBalance']
             ))
-        for event in holderEventArray:
-            i = 0
-            while i + 1 < len(weightArr):
-                #print("range condition met")
-                if int(event.timeStamp) > weightArr[i]["timeStamp"] and int(event.timeStamp) < weightArr[i+1]['timeStamp']:
-                    #print("event time is greater than weight epoch and is less than the time of the next epoch")
-                    igt_share += get_epoch_igt_points(event, weightArr[i]['weight'], weightArr[i+1]['timeStamp'])
-                i+=1;
-            #print("user event took place after latest mint")
-            igt_share += get_epoch_igt_points(event, weightArr[i]['weight'], time.time())
-    print("this is the Share    " + str(igt_share))
+    for event in holderEventArray:
+        i = 0
+        while i + 1 < len(weight_time_array):
+            if int(event.timeStamp) > weight_time_array[i]["timeStamp"]  and  int(event.timeStamp) < weight_time_array[i+1]['timeStamp']:
+                igt_share += get_epoch_igt_points(event, weight_time_array[i]['weight'], weight_time_array[i+1]['timeStamp'])
+            i+=1;
+        igt_share += get_epoch_igt_points(event, weight_time_array[i]['weight'], time.time())
     
     return(igt_share)
 
 
 def get_epoch_igt_points(event, weight, epochTime):
     balance = event.balance
+    print(balance)
     epoch_share = (float(balance) * (float(epochTime) - float(event.timeStamp)) / 86000) * weight
+    print(epoch_share)
+    time.sleep(2)
     return epoch_share
 
 

@@ -1,7 +1,7 @@
 import requests
 import json
 import time 
-from settings import GET_KEY
+from python_service.services.settings import GET_KEY
 
 ISC_MINT_AUTHORITY = "3XM6WqYLx5gKpRNwnCcUrBmJAhRHx3imktwEvbRwXavZ" 
 headers = {"token":str(GET_KEY("SOLSCAN_API_KEY"))}  
@@ -31,8 +31,6 @@ def getUserTxData(address):
 def getAllTxs(offset):
     print("hello")
     ## Get all txs with offset 
-
-
 
 def query_mint_authority():
     mints = []

@@ -1,6 +1,6 @@
 import unittest
 import time
-from igt_defs import calculate_igt_points
+from python_service.modules.igt_calc_helpers import calculate_igt_points
 
 test_wtarr1 = [{ 'timeStamp': 0, 'weight': 1, 'supply': 1},{ 'timeStamp': 5, 'weight': 1, 'supply': 2} ]
 test_txs1 = [{'timeStamp': 0, 'newBalance':1}]

@@ -1,8 +1,9 @@
-from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
-from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
-from settings import GET_KEY
-from igt_defs import isc_weight, calculate_igt_points, get_total_igt_points
+from services.settings import GET_KEY
+from services.solscan_getters import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
+from modules.update_holder_helpers import compare_ids, get_holders, check_txs
+from modules.igt_calc_helpers import isc_weight, calculate_igt_points, get_total_igt_points
+from modules.supply_helpers import add_ignored_wallets_events, add_burn_events
 import time
 
 # GLOBAL VARS
@@ -40,33 +41,6 @@ def update_holders():
                 print("duplicate caught")
 
     print("successfully updated holders")
-
-
-def add_burn_events(event_array, holders_col):
-    # no burns in user transactions after testing
-    # Write this when access to all tx database is established
-    return event_array
-
-def sort_in_event(event, temp_event_array):
-    event_num = 0
-    while int(event['timeStamp']) < int(temp_event_array[event_num]['timeStamp']):
-        event_num += 1 #This is the position for our event
-    temp_event_array.insert(event_num, event)
-    return temp_event_array
-    
-
-def add_ignored_wallets_events(event_array, user_mongo_col):
-    users = user_mongo_col.find({})
-    temp_event_array = event_array
-
-    for user in users:
-        if (user['ignored'] == True):
-            for tx in user['transactions']:
-                print(tx)
-                tx_event_object = {"_id":tx['tx_hash'], "timeStamp":tx['timeStamp'], "amount":tx['amount']}
-                temp_event_array = sort_in_event(tx_event_object, event_array)
-
-    return temp_event_array
 
 
 def update_coin_supply():
@@ -185,7 +159,7 @@ def update_igt_shares(circulating_supply):
 
 def main():
     #update_holders()
-    #update_user_transactions() ## Finished, takes long time to update
+    #update_user_transactions() ## Finished, takes long time to update, rewrite when TX database access is established
     circulating_supply = update_circulating_supply()
     update_igt_shares(circulating_supply)
 main()

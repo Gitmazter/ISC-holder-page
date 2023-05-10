@@ -1,4 +1,4 @@
-from solscan_defs import callHoldersApi
+from python_service.services.solscan_getters import callHoldersApi
 import csv 
 TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 

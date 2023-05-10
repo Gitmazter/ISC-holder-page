@@ -2,7 +2,6 @@ from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_
 from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
 from settings import GET_KEY
-from classes import Event
 from igt_defs import isc_weight, calculate_igt_points, get_total_igt_points
 import time
 
@@ -22,7 +21,7 @@ supply_collection = DB["supply"]
 ## when checking non-circulating supply
 
 def update_holders():
-    print("updating holders...")
+    print("updating holders...") 
 
     known_holders_cursor_object = all_holders_collection.find({})
     known_holders = []
@@ -42,32 +41,63 @@ def update_holders():
 
     print("successfully updated holders")
 
+
+def add_burn_events(event_array, holders_col):
+    # no burns in user transactions after testing
+    # Write this when access to all tx database is established
+    return event_array
+
+def sort_in_event(event, temp_event_array):
+    event_num = 0
+    while int(event['timeStamp']) < int(temp_event_array[event_num]['timeStamp']):
+        event_num += 1 #This is the position for our event
+    temp_event_array.insert(event_num, event)
+    return temp_event_array
+    
+
+def add_ignored_wallets_events(event_array, user_mongo_col):
+    users = user_mongo_col.find({})
+    temp_event_array = event_array
+
+    for user in users:
+        if (user['ignored'] == True):
+            for tx in user['transactions']:
+                temp_event_array = sort_in_event(tx, event_array)
+
+    return temp_event_array
+
+
 def update_coin_supply():
     print("checking and updating total supply...")
 
     coin_meta_data = callMetaApi()
     metaSupply = coin_meta_data['supply']; 
+    
+    mint_event_array = query_mint_authority();
 
-    bc_mints = query_mint_authority();
-    fetched_db_mints = supply_collection.find({})
-    db_mints = []
-    for fetched_db_mint in fetched_db_mints:
-        db_mints.append(fetched_db_mint)
+    mints_and_ignored_wallet_event_array = add_ignored_wallets_events(mint_event_array, all_holders_collection)
+
+    mints_and_ignored_wallets_and_burns_event_array = add_burn_events(mints_and_ignored_wallet_event_array, all_holders_collection)
+
+    supply_events_cursor_object = supply_collection.find({})
+    db_supply_events_array = []
+    for supply_event_in_cursor_object in supply_events_cursor_object:
+        db_supply_events_array.append(supply_event_in_cursor_object)
 
     fetchSupply = 0;
-    for bc_mint in bc_mints:
-        fetchSupply += int(bc_mint["amountMinted"])
+    for mint in mints_and_ignored_wallets_and_burns_event_array:
+        fetchSupply += int(mint["amountMinted"])
 
     print("before: " +str(fetchSupply) + "  Now: " + metaSupply) ##  THERE IS BURN!!
 
-    for bc_mint in bc_mints:
-        new_mint = True
-        for db_mint in db_mints:
-            if bc_mint["_id"] == db_mint["_id"]:
-                new_mint = False
-        if new_mint == True:
-            print("found new mint! Adding to list....")
-            supply_collection.insert_one(bc_mint)
+    for event in mints_and_ignored_wallets_and_burns_event_array:
+        new_event = True
+        for db_mint in db_supply_events_array:
+            if event["_id"] == db_mint["_id"]:
+                new_event = False
+        if new_event == True:
+            print("found new event! Adding to list....")
+            #supply_collection.insert_one(event)
 
     print("total supply updated successfully!")
     return metaSupply
@@ -121,13 +151,12 @@ def update_user_transactions():
             print('user no ' + str(i) + ' updated')
         except:
             print('error while updating user txs')
-        time.sleep(0.2) # To account for Solscan limits
+        time.sleep(0.1) # To account for Solscan limits
     print("successfully updated user transactions")
 
 def update_all_txs():
     print("hello")
     ## Update all txs to new mongoDB collection and implement into update users and update transactions defs
-
 
 def update_igt_shares(circulating_supply):
     holders = all_holders_collection.find({})
@@ -153,8 +182,8 @@ def update_igt_shares(circulating_supply):
     # print("All IGT Shares Updated")
 
 def main():
-    update_holders()
-    update_user_transactions() ## Finished, takes long time to update
+    #update_holders()
+    #update_user_transactions() ## Finished, takes long time to update
     circulating_supply = update_circulating_supply()
-    update_igt_shares(circulating_supply)
+    #update_igt_shares(circulating_supply)
 main()

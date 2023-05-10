@@ -62,7 +62,9 @@ def add_ignored_wallets_events(event_array, user_mongo_col):
     for user in users:
         if (user['ignored'] == True):
             for tx in user['transactions']:
-                temp_event_array = sort_in_event(tx, event_array)
+                print(tx)
+                tx_event_object = {"_id":tx['tx_hash'], "timeStamp":tx['timeStamp'], "amount":tx['amount']}
+                temp_event_array = sort_in_event(tx_event_object, event_array)
 
     return temp_event_array
 
@@ -86,7 +88,6 @@ def update_coin_supply():
 
     fetchSupply = 0;
     for mint in mints_and_ignored_wallets_and_burns_event_array:
-        print(mint)
         fetchSupply += float(mint["amount"])
 
     print("before: " +str(fetchSupply) + "  Now: " + metaSupply) ##  THERE IS BURN!!
@@ -98,7 +99,7 @@ def update_coin_supply():
                 new_event = False
         if new_event == True:
             print("found new event! Adding to list....")
-            #supply_collection.insert_one(event)
+            supply_collection.insert_one(event)
 
     print("total supply updated successfully!")
     return metaSupply
@@ -186,5 +187,5 @@ def main():
     #update_holders()
     #update_user_transactions() ## Finished, takes long time to update
     circulating_supply = update_circulating_supply()
-    #update_igt_shares(circulating_supply)
+    update_igt_shares(circulating_supply)
 main()

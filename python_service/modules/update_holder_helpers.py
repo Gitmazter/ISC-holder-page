@@ -1,6 +1,6 @@
 from services.solscan_getters import callHoldersApi
+from services.settings import GET_KEY
 import csv 
-TOKEN_ADDRESS = "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD"
 
 # checks if holder matches or already in database
 def compare_ids(id, holder_arr):
@@ -27,10 +27,11 @@ def get_holders(total_holders):
 
 def check_txs():
     newTxs = []
+    tokenAddress = GET_KEY("TOKEN_ADDRESS")
     with open('./csv_files/tempTx.csv', newline='') as csvfile:
         txreader = csv.reader(csvfile, delimiter=",")
         for row in txreader:
-            if (row[9] == TOKEN_ADDRESS):
+            if (row[9] == tokenAddress):
                 tx = {"tx_hash": row[0], "timeStamp":row[1], "type": row[5], "amount":row[6], "newBalance": row[8]}
                 newTxs.append(tx)
     return newTxs

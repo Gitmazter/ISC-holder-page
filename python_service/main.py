@@ -86,7 +86,8 @@ def update_coin_supply():
 
     fetchSupply = 0;
     for mint in mints_and_ignored_wallets_and_burns_event_array:
-        fetchSupply += int(mint["amountMinted"])
+        print(mint)
+        fetchSupply += float(mint["amount"])
 
     print("before: " +str(fetchSupply) + "  Now: " + metaSupply) ##  THERE IS BURN!!
 

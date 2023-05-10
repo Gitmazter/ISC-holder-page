@@ -56,14 +56,14 @@ def get_tx_data(txHash):
 
 
 def check_tx_data_for_mint(txData, txHash):
-    mint_post = {"_id":txHash, "timeStamp":txData['blockTime'], "amountMinted":""}
+    mint_post = {"_id":txHash, "timeStamp":txData['blockTime'], "amount":""}
     instructions = txData['parsedInstruction']
 
     for parsedInstruction in instructions:
         params = parsedInstruction['params']
         try:
             if params['mint']:
-                mint_post['amountMinted'] = params['tokenAmount']['amount']
+                mint_post['amount'] = params['tokenAmount']['amount']
                 return mint_post;  
         except:
             return None # Gracefully handling non-mint transactions from Authority

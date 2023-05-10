@@ -2,8 +2,7 @@ from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_
 from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
 from settings import GET_KEY
-from classes import Event
-from igt_defs import isc_weight, calculate_igt_share
+from igt_defs import isc_weight, calculate_igt_points, get_total_igt_points
 import time
 
 # GLOBAL VARS
@@ -22,7 +21,7 @@ supply_collection = DB["supply"]
 ## when checking non-circulating supply
 
 def update_holders():
-    print("updating holders...")
+    print("updating holders...") 
 
     known_holders_cursor_object = all_holders_collection.find({})
     known_holders = []
@@ -42,32 +41,63 @@ def update_holders():
 
     print("successfully updated holders")
 
+
+def add_burn_events(event_array, holders_col):
+    # no burns in user transactions after testing
+    # Write this when access to all tx database is established
+    return event_array
+
+def sort_in_event(event, temp_event_array):
+    event_num = 0
+    while int(event['timeStamp']) < int(temp_event_array[event_num]['timeStamp']):
+        event_num += 1 #This is the position for our event
+    temp_event_array.insert(event_num, event)
+    return temp_event_array
+    
+
+def add_ignored_wallets_events(event_array, user_mongo_col):
+    users = user_mongo_col.find({})
+    temp_event_array = event_array
+
+    for user in users:
+        if (user['ignored'] == True):
+            for tx in user['transactions']:
+                temp_event_array = sort_in_event(tx, event_array)
+
+    return temp_event_array
+
+
 def update_coin_supply():
     print("checking and updating total supply...")
 
     coin_meta_data = callMetaApi()
     metaSupply = coin_meta_data['supply']; 
+    
+    mint_event_array = query_mint_authority();
 
-    bc_mints = query_mint_authority();
-    fetched_db_mints = supply_collection.find({})
-    db_mints = []
-    for fetched_db_mint in fetched_db_mints:
-        db_mints.append(fetched_db_mint)
+    mints_and_ignored_wallet_event_array = add_ignored_wallets_events(mint_event_array, all_holders_collection)
+
+    mints_and_ignored_wallets_and_burns_event_array = add_burn_events(mints_and_ignored_wallet_event_array, all_holders_collection)
+
+    supply_events_cursor_object = supply_collection.find({})
+    db_supply_events_array = []
+    for supply_event_in_cursor_object in supply_events_cursor_object:
+        db_supply_events_array.append(supply_event_in_cursor_object)
 
     fetchSupply = 0;
-    for bc_mint in bc_mints:
-        fetchSupply += int(bc_mint["amountMinted"])
+    for mint in mints_and_ignored_wallets_and_burns_event_array:
+        fetchSupply += int(mint["amountMinted"])
 
     print("before: " +str(fetchSupply) + "  Now: " + metaSupply) ##  THERE IS BURN!!
 
-    for bc_mint in bc_mints:
-        new_mint = True
-        for db_mint in db_mints:
-            if bc_mint["_id"] == db_mint["_id"]:
-                new_mint = False
-        if new_mint == True:
-            print("found new mint! Adding to list....")
-            supply_collection.insert_one(bc_mint)
+    for event in mints_and_ignored_wallets_and_burns_event_array:
+        new_event = True
+        for db_mint in db_supply_events_array:
+            if event["_id"] == db_mint["_id"]:
+                new_event = False
+        if new_event == True:
+            print("found new event! Adding to list....")
+            #supply_collection.insert_one(event)
 
     print("total supply updated successfully!")
     return metaSupply
@@ -76,6 +106,7 @@ def update_coin_supply():
 def update_circulating_supply():
     totalSupply = update_coin_supply();
     print("checking and updating circulating supply...")
+
     fetched_holders = all_holders_collection.find({})
     holders = []
     for fetched_holder in fetched_holders:
@@ -113,111 +144,46 @@ def update_user_transactions():
 
         myquery = { "_id": holderId}
         newvalues = { "$set": { "transactions": check_txs() } }
-
+        i = 0
         try:
             all_holders_collection.update_one(myquery, newvalues)
-            print('user updated')
+            i += 1
+            print('user no ' + str(i) + ' updated')
         except:
             print('error while updating user txs')
-        time.sleep(0.2) # To account for Solscan limits
+        time.sleep(0.1) # To account for Solscan limits
     print("successfully updated user transactions")
 
 def update_all_txs():
     print("hello")
     ## Update all txs to new mongoDB collection and implement into update users and update transactions defs
 
-
 def update_igt_shares(circulating_supply):
-    print("Calculating User IGT Shares")
-    
     holders = all_holders_collection.find({})
     supply_cursor_object = supply_collection.find({})
     
-    supplyArr = []
+    supply_arr = []
     for supply in supply_cursor_object:
-        supplyArr.append(supply)
-    supplyArr.reverse()
+        supply_arr.append(supply)
+    supply_arr.reverse()
 
-    total_supply = 0
-    supplyEventArr = []
+    weight_time_array = isc_weight(circulating_supply, supply_arr)
+    total_igt_points = get_total_igt_points(weight_time_array)
 
-    for event in supplyArr:
-        total_supply += int(event["amountMinted"])
-        supplyEventArr.append(Event(event['timeStamp'], total_supply, 0))
-    
-    weight_time_array = isc_weight(circulating_supply, supplyEventArr)
-
-    total_points = 0
-
-    print("total supply: " + str(total_supply))
     for holder in holders:
-        share = calculate_igt_share(holder['transactions'], supplyEventArr, weight_time_array)
-        #time.sleep(2)
-        total_points += share
-        print("these are the users igt points: " + str(share))
+        share = calculate_igt_points(holder['transactions'], weight_time_array)
+        total_igt_points -= share
+
         # myquery = { "_id": holder["_id"]}
         # newvalues = { "$set": { "igtShare": calculate_igt_share(holder, supplyArr) } }
-
-        # all_holders_collection.update_one(myquery, newvalues)
-    print(total_points)
-    print("All IGT Shares Updated")
+    print(total_igt_points)
+    #     # all_holders_collection.update_one(myquery, newvalues)
+    # print(total_points)
+    # print("All IGT Shares Updated")
 
 def main():
     #update_holders()
     #update_user_transactions() ## Finished, takes long time to update
     circulating_supply = update_circulating_supply()
-    update_igt_shares(circulating_supply)
+    #update_igt_shares(circulating_supply)
 main()
-
-
-
-
-
-## Calculate user holdings over time since start of quarterly epoch.
- # Should 1 second or 1 day be equal to 1 point? To simplify math?
- # Ignore wallets with holder["ignored"] = true
-""" 
-Method: 
-    Example 1:
-        If a holder holds 1 ISC for 1 UNIX day, 86400 seconds, they now have 1(or 86400) hold point(s)
-        the hold point divided by current supply will equal their share IGT accrued for that day
-        example: 
-        It is exactly 60 days since launch of ISC
-        Holder buys and holds 200 ISC tokens for 30(* 86400 seconds (unix)) days thus accumulating 6000 hold points
-        during this time the circulating supply stays the same and thus the total hold points to be distributed equals:
-        230.000 * 90(* 86400 seconds (unix)) = 20.700.000
-        as the holder has 6000 points accrued while holding, their share of IGT will equal:
-        6000 / 20.700.000 = 0.0002898550 (Decimals continue but will be rounded to smallest IGT decimal)
-        therefore if 1.000.000 IGT will be distributed, this holder will receive (share * IGT supply): 289.85507246 IGT
-        
-    Example 2 (supply change):
-        following the previous example but adding a supply change during the quarter,
-        trying to be as accurate as possible:
-        this quarter consists of 91.5 days = 7,905,600 seconds
-        the total supply for the first 42 days and 39,000 seconds is : 230000 ISC
-        (the total seconds for this time span is: 3,667,800)
-        (total seconds for second supply span is 4,237,800 seconds)
-        at this exact time a block is created where a transaction mints 215000ISC making the total supply 435000ISC
-        A holder buys 3251 ISC on day 31 and 41000 seconds into the quarter then holds it until 
-        86400 seconds(1 day) of the quarter is remaining. (the holder buys ISC at second 2,719,400)
-        How many IGT will he receive if 1,000,000 IGT will be distributed? :
-        1st time span consists of ( 3,667,800 * 230,000 ISC points ) :: 843,594,000,000
-        2nd time span consists of (4,237,800 * 435,000 ISC points) :: 1,843,443,000,000
-        the holder holds 3251 ISC for the final (3,667,800 - 2,719,400 )= 948,400 seconds of the first time span
-        earning(time * held ISC): 3,083,248,400 ISC points out of a total 843,410,000,000
-        for the second time span the holder holds for (4,236,800 - 86400(to account for sale))= 4,150,400sec and earns
-        (time * held ISC): 13,492,950,400
-        since the holdings during the first time span held a greater weight, we account for this by factoring in 
-        the supply change by multiplying all previous points by 435000/230000 = ~1.8913
-        so the users total points are now: (3,083,248,400 * 1.8913) + 13,492,950,400 = 19,324,298,098.92
-        and the total ISC points are now: (1st span * 1.8913) 1,595,489,332,200 + 2nd span = 3,438,932,332,200
-        the users total IGT share is now = user points / total points * IGT supply = 5,619.272562 IGT
-
-"""
-#The quarter ends by starting new holder ledgers after a set time or when a mint/send Tx is detected by IGT Token Account 
-#Thought, do holder points carry over to next quarter or reset?
-
-
-
-
- 

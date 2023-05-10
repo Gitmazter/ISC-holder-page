@@ -2,7 +2,6 @@ from solscan_defs import callHoldersApi, callMetaApi, getUserTxData, query_mint_
 from update_holder_services import compare_ids, get_holders, check_txs
 from pymongo import MongoClient
 from settings import GET_KEY
-from classes import Event
 from igt_defs import isc_weight, calculate_igt_points, get_total_igt_points
 import time
 
@@ -22,7 +21,7 @@ supply_collection = DB["supply"]
 ## when checking non-circulating supply
 
 def update_holders():
-    print("updating holders...")
+    print("updating holders...") 
 
     known_holders_cursor_object = all_holders_collection.find({})
     known_holders = []
@@ -48,11 +47,13 @@ def add_burn_events(event_array, holders_col):
     # Write this when access to all tx database is established
     return event_array
 
-def sort_in_event(event, event_array):
+def sort_in_event(event, temp_event_array):
     event_num = 0
-    while int(event['timeStamp']) < int(event_array[event_num]['timeStamp']):
-        event_num += 1
-        #### LEFT OFF HERRE
+    while int(event['timeStamp']) < int(temp_event_array[event_num]['timeStamp']):
+        event_num += 1 #This is the position for our event
+    temp_event_array.insert(event_num, event)
+    return temp_event_array
+    
 
 def add_ignored_wallets_events(event_array, user_mongo_col):
     users = user_mongo_col.find({})

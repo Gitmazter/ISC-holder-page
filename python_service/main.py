@@ -145,20 +145,17 @@ def update_igt_shares(circulating_supply):
 
     weight_time_array = isc_weight(circulating_supply, supply_arr)
     total_igt_points = get_total_igt_points(weight_time_array)
+    remaining_igt_points = total_igt_points
 
     for holder in holders:
         share = calculate_igt_points(holder['transactions'], weight_time_array)
-        if holder['_id'] == "BGH4gAwUbCpH7dkPS5MiifemKdMXB1mjjCGKLtGuHNjU":
-            print(share)
-        share = calculate_igt_points(holder['transactions'], weight_time_array)
-        total_igt_points -= share
+        remaining_igt_points -= share
 
-        # myquery = { "_id": holder["_id"]}
-        # newvalues = { "$set": { "igtShare": calculate_igt_share(holder, supplyArr) } }
+        myquery = { "_id": holder["_id"]}
+        newvalues = { "$set": { "igtShare": share } }
+        all_holders_collection.update_one(myquery, newvalues)
     print(total_igt_points)
-    #     # all_holders_collection.update_one(myquery, newvalues)
-    # print(total_points)
-    # print("All IGT Shares Updated")
+    print(remaining_igt_points)
 
 def main():
     #update_holders()

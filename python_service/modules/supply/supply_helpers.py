@@ -10,7 +10,6 @@ def sort_in_event(event, temp_event_array):
     temp_event_array.insert(event_num, event)
     return temp_event_array
     
-
 def add_ignored_wallets_events(event_array, user_mongo_col):
     users = user_mongo_col.find({})
     temp_event_array = event_array

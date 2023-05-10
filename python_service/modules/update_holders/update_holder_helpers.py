@@ -10,7 +10,6 @@ def compare_ids(id, holder_arr):
             new_user = False
     return new_user
 
-
 # gets all holders from solscan
 def get_holders(total_holders):
         print("total holders:" + str(total_holders))

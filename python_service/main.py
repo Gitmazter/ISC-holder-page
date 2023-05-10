@@ -148,6 +148,9 @@ def update_igt_shares(circulating_supply):
 
     for holder in holders:
         share = calculate_igt_points(holder['transactions'], weight_time_array)
+        if holder['_id'] == "BGH4gAwUbCpH7dkPS5MiifemKdMXB1mjjCGKLtGuHNjU":
+            print(share)
+        share = calculate_igt_points(holder['transactions'], weight_time_array)
         total_igt_points -= share
 
         # myquery = { "_id": holder["_id"]}

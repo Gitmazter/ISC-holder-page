@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from services.settings import GET_KEY
 from services.solscan_getters import callHoldersApi, callMetaApi, getUserTxData, query_mint_authority
-from modules.update_holder_helpers import compare_ids, get_holders, check_txs
+from modules.update_holder_helpers import compare_ids, get_holders,check_txs
 from modules.igt_calc_helpers import isc_weight, calculate_igt_points, get_total_igt_points
 from modules.supply_helpers import add_ignored_wallets_events, add_burn_events
 import time

@@ -1,7 +1,7 @@
 import requests
 import json
 import time 
-from python_service.services.settings import GET_KEY
+from services.settings import GET_KEY
 
 ISC_MINT_AUTHORITY = "3XM6WqYLx5gKpRNwnCcUrBmJAhRHx3imktwEvbRwXavZ" 
 headers = {"token":str(GET_KEY("SOLSCAN_API_KEY"))}  

@@ -24,14 +24,8 @@ def getUserTxData(address):
     timeNow = str(round(time.time()))
     URI = "https://public-api.solscan.io/account/exportTransactions?account="+ address + "&type=tokenchange&fromTime=" + prevTime + "&toTime=" + timeNow;
     res = requests.get(URI, headers=headers)
-
     resCsvStr = res.text
-
     return resCsvStr #This is the CSV data for an Accounts Token Txs
-
-def getAllTxs(offset):
-    print("hello")
-    ## Get all txs with offset 
 
 def query_mint_authority():
     mints = []
@@ -39,12 +33,10 @@ def query_mint_authority():
     res = requests.get(URI, headers=headers)
     response = json.loads(res.text) #Transactions from Mint Auth, need to scan individual TXs for Mint Proof
     for tx in response:
-        txData = get_tx_data(tx['txHash'])
-         
+        txData = get_tx_data(tx['txHash'])    
         mintTxData = check_tx_data_for_mint(txData, tx['txHash'])
         if mintTxData != None:
             mints.append(mintTxData)
-    
     return mints
 
 def get_tx_data(txHash):
@@ -53,11 +45,9 @@ def get_tx_data(txHash):
     txData = json.loads(res.text)
     return txData
 
-
 def check_tx_data_for_mint(txData, txHash):
     mint_post = {"_id":txHash, "timeStamp":txData['blockTime'], "amount":""}
     instructions = txData['parsedInstruction']
-
     for parsedInstruction in instructions:
         params = parsedInstruction['params']
         try:
@@ -66,3 +56,7 @@ def check_tx_data_for_mint(txData, txHash):
                 return mint_post;  
         except:
             return None # Gracefully handling non-mint transactions from Authority
+
+def getAllTxs(offset):
+    print("hello")
+    ## Get all txs with offset 

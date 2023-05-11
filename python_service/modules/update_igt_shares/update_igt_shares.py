@@ -21,6 +21,6 @@ def update_igt_shares(circulating_supply, all_holders_collection, supply_collect
 
         myquery = { "_id": holder["_id"]}
         newvalues = { "$set": { "igtShare": share } }
-        all_holders_collection.update_one(myquery, newvalues)
+        #all_holders_collection.update_one(myquery, newvalues)
     print(total_igt_points)
     print(remaining_igt_points)

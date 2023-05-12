@@ -9,6 +9,7 @@ tx {bal + 1, supply +1, timestamp}
 tx
 dummy tx ( == last tx in list with time.time() timestamp )
 
+
 for each tx 
 IGT += myFunc(tx1, tx2)
 

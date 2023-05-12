@@ -15,8 +15,6 @@ def calculate_igt_points(holder_txs, weight_time_array):
     
     make_weighted_txs(holder_txs, weight_time_array)
 
-
-
     tx_num = 0
     # while tx_num < len(holder_txs):
     #     print()
@@ -24,4 +22,8 @@ def calculate_igt_points(holder_txs, weight_time_array):
     return igt_points
 
 def make_weighted_txs():
-    weighted_tx_array 
+    weighted_tx_array = []
+
+    
+
+    return weighted_tx_array

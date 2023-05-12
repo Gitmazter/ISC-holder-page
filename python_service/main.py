@@ -15,9 +15,10 @@ transactions_collection =  DB["all_transactions"]
 supply_collection = DB["supply"]
 
 def main():
-    update_holders(all_holders_collection)
-    update_user_transactions(all_holders_collection) ## Finished, takes long time to update, rewrite when TX database access is established
-    circulating_supply = update_circulating_supply(all_holders_collection, supply_collection)
+    #update_holders(all_holders_collection)
+    #update_user_transactions(all_holders_collection) ## Finished, takes long time to update, rewrite when TX database access is established
+    # circulating_supply = update_circulating_supply(all_holders_collection, supply_collection)
+    circulating_supply = 230000000000
     update_igt_shares(circulating_supply, all_holders_collection, supply_collection)
 
 main()

@@ -1,4 +1,5 @@
 from services.solscan_getters import callHoldersApi, getUserTxData
+import time
 from modules.update_holders.update_holder_helpers import compare_ids, get_holders, check_txs
 
 def update_holders(all_holders_collection):
@@ -20,6 +21,8 @@ def update_holders(all_holders_collection):
             except:
                 print("duplicate caught")
 
+    
+
     print("successfully updated holders")
 
 def update_user_transactions(all_holders_collection):
@@ -31,12 +34,12 @@ def update_user_transactions(all_holders_collection):
         holderTokenAddress = holder["token_wallet_address"]
         holderId = holder["_id"]
 
-        holderTxsCsv = getUserTxData(holderTokenAddress)
+        holderTxsCsv = getUserTxData(holderTokenAddress, str(round(time.time())))
         with open('./csv_files/tempTx.csv', 'w') as out:
             out.write(holderTxsCsv)
 
         myquery = { "_id": holderId}
-        newvalues = { "$set": { "transactions": check_txs() } }
+        newvalues = { "$set": { "transactions": check_txs(holderTokenAddress) } }
         try:
             all_holders_collection.update_one(myquery, newvalues)
             i += 1

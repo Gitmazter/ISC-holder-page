@@ -3,6 +3,8 @@ from modules.update_igt_shares.update_igt_helpers.helpers import get_period_poin
 
 from modules.supply.supply_helpers import sort_in_event
 
+# Try not to use floats, decimals package works
+
 
 def calculate_igt_points(holder_txs, weight_time_array):
     igt_points = 0.00

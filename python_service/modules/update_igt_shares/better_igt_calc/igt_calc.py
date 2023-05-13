@@ -3,20 +3,10 @@ from modules.update_igt_shares.better_igt_calc.Event import Event
 igt_per_second = 1000000 / 30.5 / 86400
 
 def get_total_igt(supply_array, now):
-    igt_total = 0
-    isc_supply = 0
-    event_array = []
-
-    for event in supply_array:
-        isc_supply += int(event['amount'])
-        event_array.append(Event(event['timeStamp'], isc_supply, isc_supply))
-    event_array.append(Event(now, isc_supply, isc_supply))
-
-    event_range = range( 0, len(event_array) - 1 )
-    for i in event_range:
-        igt_total += get_igt(event_array[i], event_array[i + 1])
-
-    return igt_total
+    start_time = supply_array[0]['timeStamp']
+    time_since_launch = now - start_time
+    total_igt = igt_per_second * time_since_launch
+    return total_igt
 
 def igt_calc(user_transactions, supply_array, now):
     igt_owed = 0

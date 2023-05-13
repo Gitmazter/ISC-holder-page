@@ -15,16 +15,18 @@ def update_igt_shares(circulating_supply, all_holders_collection, supply_collect
     for holder in holders:
         share = igt_calc(holder['transactions'], supply_arr, now)
         total_share += share
-        myquery = { "_id": holder["_id"]}
-        newvalues = { "$set": { "igtShare": share } }
-        all_holders_collection.update_one(myquery, newvalues)
+        # myquery = { "_id": holder["_id"]}
+        # newvalues = { "$set": { "igtShare": share } }
+        # all_holders_collection.update_one(myquery, newvalues)
     verify_shares(total_share, supply_arr, now)
 
 
 def verify_shares(total_share, supply_arr, now):
     total_igt = get_total_igt(supply_arr, now)
+    print(total_share)
+    print(total_igt)
 
-    if total_share - total_igt < 2 and total_share - total_igt > -2:
-        print("shares verified with a tolerance of 4 points")
+    if total_share - total_igt < 1 and total_share - total_igt > -1:
+        print("shares verified with a tolerance of 2 points")
 
 

@@ -23,5 +23,8 @@ def update_igt_shares(circulating_supply, all_holders_collection, supply_collect
 
 def verify_shares(total_share, supply_arr, now):
     total_igt = get_total_igt(supply_arr, now)
-    
+
+    if total_share - total_igt < 2 and total_share - total_igt > -2:
+        print("shares verified with a tolerance of 4 points")
+
 

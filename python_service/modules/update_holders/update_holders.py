@@ -21,8 +21,6 @@ def update_holders(all_holders_collection):
             except:
                 print("duplicate caught")
 
-    
-
     print("successfully updated holders")
 
 def update_user_transactions(all_holders_collection):

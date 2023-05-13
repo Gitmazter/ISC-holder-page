@@ -1,4 +1,5 @@
-from modules.update_igt_shares.better_igt_calc.igt_calc import igt_calc, get_total_igt
+from modules.update_igt_shares.better_igt_calc.verification import verify_shares, validate_via_timestamps, validate_user_txs
+from modules.update_igt_shares.better_igt_calc.igt_calc import igt_calc
 import time
 
 def update_igt_shares(all_holders_collection, supply_collection):
@@ -12,41 +13,23 @@ def update_igt_shares(all_holders_collection, supply_collection):
 
     total_share = 0
     now = time.time()
+
     for holder in holders:
+        validate_user_txs(holder['transactions'])
         share = igt_calc(holder['transactions'], supply_arr, now)
         total_share += share
-        myquery = { "_id": holder["_id"]}
-        newvalues = { "$set": { "igtShare": share } }
-        all_holders_collection.update_one(myquery, newvalues)
+        # myquery = { "_id": holder["_id"]}
+        # newvalues = { "$set": { "igtShare": share } }
+        # all_holders_collection.update_one(myquery, newvalues)
+    all_txs = get_all_txs(all_holders_collection)
+    print(len(all_txs))
+    #print(validate_via_timestamps(all_txs))
     verify_shares(total_share, supply_arr, now)
 
-
-def verify_shares(total_share, supply_arr, now):
-    total_igt = get_total_igt(supply_arr, now)
-    print(total_share)
-    print(total_igt)
-
-    if total_share - total_igt < 1 and total_share - total_igt > -1:
-        print("shares verified with a tolerance of 2 points")
-
-
-
-def get_time(tx):
-    return tx['timeStamp']
-
-def validate_via_timestamps(all_transactions):
-    #earliest_timestamp = find_earliest_timestamp(all_transactions)
-    sorted_transactions = sorted(all_transactions, key=get_time)
-    are_txs_valid = validate_all_txs(sorted_transactions)
-
-
-def find_earliest_timestamp(all_transactions):
-    earliest = int(all_transactions[0]['timeStamp'])
-    print(len(all_transactions))
-    for tx in all_transactions:
-        if earliest > int(tx['timeStamp']):
-            earliest = int(tx['timeStamp'])
-    
-    print('earliest timestamp:' + str(earliest))
-
-    return earliest
+def get_all_txs(holders_col):
+    holders = holders_col.find({})
+    all_txs = []
+    for holder in holders:
+        for tx in holder['transactions']:
+            all_txs.append(tx)
+    return all_txs

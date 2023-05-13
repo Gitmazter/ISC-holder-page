@@ -27,16 +27,6 @@ def get_holders(total_holders):
         
         return holders
 
-def validate_user_txs(holder_transactions):
-    holder_transactions.reverse()
-    expected_balance = 0.00
-    for tx in holder_transactions:
-        expected_balance += float(tx['amount'])
-
-    expected_balance = round(expected_balance, 6)
-    if float(holder_transactions[len(holder_transactions)-1]['newBalance']) != expected_balance:
-        print("expected_balance: ", expected_balance, " Actual Balance: ",  holder_transactions[len(holder_transactions)-1]['newBalance'])
-
 def check_txs(holderTokenAddress):
     newTxs = []
     tokenAddress = GET_KEY("TOKEN_ADDRESS")

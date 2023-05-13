@@ -2,7 +2,7 @@ from modules.update_igt_shares.update_igt_helpers.helpers import get_period_poin
 
 def calculate_igt_points(holder_txs, weight_time_array):
     igt_points = 0.00
-    holder_txs.reverse()
+    #holder_txs.reverse()
     #print(weight_time_array)
 
     epoch_num = 0

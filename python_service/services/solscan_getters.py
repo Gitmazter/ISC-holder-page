@@ -19,10 +19,8 @@ def callMetaApi():
     response = json.loads(res.text)
     return response
 
-def getUserTxData(address):
-    prevTime = "0";
-    timeNow = str(round(time.time()))
-    URI = "https://public-api.solscan.io/account/exportTransactions?account="+ address + "&type=tokenchange&fromTime=" + prevTime + "&toTime=" + timeNow;
+def getUserTxData(address, offset):
+    URI = "https://public-api.solscan.io/account/exportTransactions?account="+ address + "&type=tokenchange&fromTime=" + '0' + "&toTime=" + str(offset);
     res = requests.get(URI, headers=headers)
     resCsvStr = res.text
     return resCsvStr #This is the CSV data for an Accounts Token Txs

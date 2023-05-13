@@ -30,3 +30,23 @@ def verify_shares(total_share, supply_arr, now):
         print("shares verified with a tolerance of 2 points")
 
 
+
+def get_time(tx):
+    return tx['timeStamp']
+
+def validate_via_timestamps(all_transactions):
+    #earliest_timestamp = find_earliest_timestamp(all_transactions)
+    sorted_transactions = sorted(all_transactions, key=get_time)
+    are_txs_valid = validate_all_txs(sorted_transactions)
+
+
+def find_earliest_timestamp(all_transactions):
+    earliest = int(all_transactions[0]['timeStamp'])
+    print(len(all_transactions))
+    for tx in all_transactions:
+        if earliest > int(tx['timeStamp']):
+            earliest = int(tx['timeStamp'])
+    
+    print('earliest timestamp:' + str(earliest))
+
+    return earliest

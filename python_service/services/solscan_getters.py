@@ -2,15 +2,25 @@ import requests
 import json
 import time 
 from services.settings import GET_KEY
+from urllib.request import Request, urlopen
 
 tokenAddress = GET_KEY("TOKEN_ADDRESS")
 mintAuthority = GET_KEY("MINT_AUTHORITY")
-headers = {"token":str(GET_KEY("SOLSCAN_API_KEY"))}  
+apiKey = GET_KEY("SOLSCAN_API_KEY")
+
+headers = {
+    "token": apiKey,
+    'User-Agent': 'Mozilla/5.0'
+    }  
 
 def callHoldersApi(offset): 
-    URI = "https://public-api.solscan.io/token/holders?tokenAddress=" + tokenAddress + "&limit=50&offset=" + str(offset)
-    res = requests.get(URI, headers=headers)
-    response = json.loads(res.text)
+    URI ="https://public-api.solscan.io/token/holders?tokenAddress=" + tokenAddress + "&limit=50&offset=" + str(offset)
+    req = Request(
+        url=URI, 
+        headers=headers
+    )
+    webpage = urlopen(req).read()
+    response = json.loads(webpage)
     return response
 
 def callMetaApi():
@@ -19,10 +29,8 @@ def callMetaApi():
     response = json.loads(res.text)
     return response
 
-def getUserTxData(address):
-    prevTime = "0";
-    timeNow = str(round(time.time()))
-    URI = "https://public-api.solscan.io/account/exportTransactions?account="+ address + "&type=tokenchange&fromTime=" + prevTime + "&toTime=" + timeNow;
+def getUserTxData(address, offset):
+    URI = "https://public-api.solscan.io/account/exportTransactions?account="+ address + "&type=tokenchange&fromTime=" + '0' + "&toTime=" + str(offset);
     res = requests.get(URI, headers=headers)
     resCsvStr = res.text
     return resCsvStr #This is the CSV data for an Accounts Token Txs

@@ -28,7 +28,7 @@ Install all dependecies if not already installed:
     pip install pymongo \<br/>
     pip install flask \<br/>
     pip install flask_cors \<br/>
-    pip install flask_ngrok \<br/>
+    pip install flask_ngrok<br/>
 </blockquote>
 
 <hr/>

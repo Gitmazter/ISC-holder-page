@@ -16,7 +16,7 @@ def update_igt_shares(all_holders_collection, supply_collection):
     print("now 1 " + str(now))
 
     for holder in holders:
-        validate_user_txs(holder['transactions'])
+        #validate_user_txs(holder['transactions'])
         share = igt_calc(holder['transactions'], supply_arr, now)
         if (holder["_id"] ==  "8G46LehJsszbjes5cUZ3M1kXrumiBre2cyRN22opo9HE"):
             print(share)

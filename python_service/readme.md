@@ -45,18 +45,10 @@ From root run the main function to initialize DB and collect data <br/>
 <hr/>
 <h2> Step 5 </h2>
 <p>
-Once the DB has been initialized and updated, start the server locally at your port of choice (*Select Port at end of Server.py file*) by typing the command, this is done in the root folder:
+Once the DB has been initialized and updated, start the server locally and ngrok will create a web tunnel.
 </p>
 <blockquote>
     python3 server.py
-</blockquote>
-<hr/>
-<h2> Step 6 </h2>
-<p>
-Open a new terminal and cd into the project root folder then type the command 
-</p>
-<blockquote>
-    ngrok http *Your Port*
 </blockquote>
 <hr/>
 <h2> Step 6 </h2>

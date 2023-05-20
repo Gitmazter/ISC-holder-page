@@ -1,8 +1,12 @@
-from flask import *
-import json, time
 from modules.update_igt_shares.update_igt_shares import get_single_share
 from pymongo import MongoClient
 from services.settings import GET_KEY
+from flask import Flask, Response, request
+from flask_cors import CORS
+from flask_ngrok import run_with_ngrok
+import logging
+import time
+
 
 # GLOBAL VARS
 MONGO_DB_URL = "mongodb+srv://"+ str(GET_KEY("MONGO_DB_UN")) + ":" + str(GET_KEY("MONGO_DB_KEY")) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
@@ -13,27 +17,28 @@ DB = CLUSTER["ISC"]
 all_holders_collection = DB["all_holders"]
 supply_collection = DB["supply"]
 
-
-
+""" FLASK STUFF """
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('flask_cors').level = logging.DEBUG
+CORS(app, resources={r"/*": {"origins": "*"}})
+run_with_ngrok(app)
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['POST'])
 def home_page():
-    data_set ={'Page' : "Home", "Message" : "Fully Loaded The Home Page", "Timestamp" : time.time()}
-    json_dump = json.dumps(data_set)
+    data_set = '{"hallo":"world","I":"Am","Timestamp":%s}' % (time.time())
+    response = Response(str(data_set))
+    return response
 
-    return json_dump
-
-@app.route('/igtBalance/', methods=['GET'])
+@app.route('/user/', methods=['POST']) 
 def request_page():
-    user_query = str(request.args.get('address')) # /user/?address=yourPubKey
+    user_query = request.args.get('address') # /user/?address=yourPubKey
+    user = user_query
     user_balance = get_single_share(all_holders_collection, supply_collection, id=user_query)
 
-    data_set = {"Page" : "igtBalance", "Message" : f"User igt balance {user_balance}", "Timestamp" : time.time() }    
-    json_dump = json.dumps(data_set)
-
-    return json_dump
+    data_set = '{"User": "%s" ,"IGT_balance":%s,"Timestamp":%s}' % (user, user_balance, time.time())
+    return Response(str(data_set))
 
 
 if __name__ == '__main__':
-    app.run(port=7777)
+    app.run()

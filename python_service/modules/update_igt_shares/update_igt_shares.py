@@ -36,3 +36,22 @@ def get_all_txs(holders_col):
         for tx in holder['transactions']:
             all_txs.append(tx)
     return all_txs
+
+def get_single_share(all_holders_collection, supply_collection, id):
+
+    now = time.time()
+    holder_cursor = all_holders_collection.find({ "_id" :  id })
+    holder = holder_cursor[0]
+
+    supply_cursor_object = supply_collection.find({})
+
+    supply_arr = []
+    for supply in supply_cursor_object:
+        supply_arr.append(supply)
+    supply_arr.reverse()
+
+    validate_user_txs(holder['transactions'])
+    
+    share = igt_calc(holder['transactions'], supply_arr, now)
+    
+    return(share)

@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from services.settings import GET_KEY
 from modules.update_holders.update_holders import update_holders, update_user_transactions
 from modules.supply.supply import update_circulating_supply
-from modules.update_igt_shares.update_igt_shares import update_igt_shares
+from modules.update_igt_shares.update_igt_shares import update_igt_shares, get_single_share
 
 # GLOBAL VARS
 MONGO_DB_URL = "mongodb+srv://"+ str(GET_KEY("MONGO_DB_UN")) + ":" + str(GET_KEY("MONGO_DB_KEY")) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"

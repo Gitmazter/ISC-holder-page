@@ -21,9 +21,9 @@ def update_igt_shares(all_holders_collection, supply_collection):
         if (holder["_id"] ==  "8G46LehJsszbjes5cUZ3M1kXrumiBre2cyRN22opo9HE"):
             print(share)
         total_share += share
-        # myquery = { "_id": holder["_id"]}
-        # newvalues = { "$set": { "igtShare": share } }
-        # all_holders_collection.update_one(myquery, newvalues)
+        myquery = { "_id": holder["_id"]}
+        newvalues = { "$set": { "igtShare": share } }
+        all_holders_collection.update_one(myquery, newvalues)
     all_txs = get_all_txs(all_holders_collection)
     #print(validate_via_timestamps(all_txs))
     print("now 2 " + str(now))
@@ -51,7 +51,13 @@ def get_single_share(all_holders_collection, supply_collection, id):
     supply_arr.reverse()
 
     validate_user_txs(holder['transactions'])
-    
+
     share = igt_calc(holder['transactions'], supply_arr, now)
-    
-    return(share)
+
+    myquery = { "_id": holder["_id"]}
+    newvalues = { "$set": { "igtShare": share } }
+    all_holders_collection.update_one(myquery, newvalues)
+
+    holder = all_holders_collection.find({ "_id" :  id })[0]
+
+    return(holder)

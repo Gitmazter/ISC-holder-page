@@ -1,11 +1,10 @@
 from modules.update_igt_shares.update_igt_shares import get_single_share
 from pymongo import MongoClient
 from services.settings import GET_KEY
-from flask import Flask, Response, request
+from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
 from flask_ngrok import run_with_ngrok
-import logging
-import time
+import time, json, logging
 
 
 # GLOBAL VARS
@@ -33,11 +32,13 @@ def home_page():
 @app.route('/user/', methods=['POST']) 
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey
-    user = user_query
-    user_balance = get_single_share(all_holders_collection, supply_collection, id=user_query)
+    # user = user_query
+    # user_balance = get_single_share(all_holders_collection, supply_collection, id=user_query)
+    # data_set = '{"User": "%s" ,"IGT_balance":%s,"Timestamp":%s}' % (user, user_balance, time.time())
 
-    data_set = '{"User": "%s" ,"IGT_balance":%s,"Timestamp":%s}' % (user, user_balance, time.time())
-    return Response(str(data_set))
+    user = get_single_share(all_holders_collection, supply_collection, id=user_query)
+    json_user = json.dumps(user)
+    return Response(json_user)
 
 
 if __name__ == '__main__':

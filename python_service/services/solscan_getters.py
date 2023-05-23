@@ -1,6 +1,5 @@
 import requests
 import json
-import time 
 from services.settings import GET_KEY
 from urllib.request import Request, urlopen
 

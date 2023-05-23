@@ -1,7 +1,8 @@
 from modules.update_igt_shares.update_igt_shares import get_single_share
+from modules.update_holders.update_holders import update_single_user_txs
 from pymongo import MongoClient
 from services.settings import GET_KEY
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, request
 from flask_cors import CORS
 from flask_ngrok import run_with_ngrok
 import time, json, logging
@@ -32,14 +33,15 @@ def home_page():
 @app.route('/user/', methods=['POST']) 
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey
-    # user = user_query
-    # user_balance = get_single_share(all_holders_collection, supply_collection, id=user_query)
-    # data_set = '{"User": "%s" ,"IGT_balance":%s,"Timestamp":%s}' % (user, user_balance, time.time())
-    
-    user = get_single_share(all_holders_collection, supply_collection, id=user_query)
-    json_user = json.dumps(user)
-    return Response(json_user)
+    holder = all_holders_collection.find({ "_id" :  user_query })[0]
 
+    update_single_user_txs(holder, all_holders_collection)
+    get_single_share(all_holders_collection, supply_collection, id=user_query)
+
+    updated_holder = all_holders_collection.find({ "_id" :  user_query })[0]
+
+    json_holder = json.dumps(updated_holder)
+    return Response(json_holder)
 
 if __name__ == '__main__':
     app.run()

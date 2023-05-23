@@ -34,30 +34,31 @@ def update_holders(all_holders_collection):
     print("successfully updated holders")
 
 
-
-
-
 def update_user_transactions(all_holders_collection):
     print("updating user transactions... (this may take a while)")
 
     current_holders = all_holders_collection.find({})
     i = 0
     for holder in current_holders:
-        holderTokenAddress = holder["token_wallet_address"]
-        holderId = holder["_id"]
-
-        holderTxsCsv = getUserTxData(holderTokenAddress, str(round(time.time())))
-        with open('./csv_files/tempTx.csv', 'w') as out:
-            out.write(holderTxsCsv)
-
-        myquery = { "_id": holderId}
-        newvalues = { "$set": { "transactions": check_txs(holderTokenAddress) } }
-        try:
-            all_holders_collection.update_one(myquery, newvalues)
-            i += 1
-            print('user no ' + str(i) + ' updated')
-        except:
-            print('error while updating user txs')
+        i += 1
+        if (i > 3920):
+            print('updating user %s' % i)
+            update_single_user_txs(holder, all_holders_collection)
     print("successfully updated user transactions")
 
+
+def update_single_user_txs(holder, all_holders_collection):
+    holderTokenAddress = holder["token_wallet_address"]
+    holderId = holder["_id"]
+
+    holderTxsCsv = getUserTxData(holderTokenAddress, str(round(time.time())))
+    with open('./csv_files/tempTx.csv', 'w') as out:
+        out.write(holderTxsCsv)
     
+    myquery = { "_id": holderId}
+    newvalues = { "$set": { "transactions": check_txs(holderTokenAddress) } }
+    try:
+        all_holders_collection.update_one(myquery, newvalues)
+        print('user:: ' + holder["_id"] + ' updated')
+    except:
+        print('error while updating user txs')

@@ -2,6 +2,9 @@ from services.solscan_getters import callHoldersApi, getUserTxData
 import time
 from modules.update_holders.update_holder_helpers import compare_ids, get_holders, check_txs
 
+
+
+
 def update_holders(all_holders_collection):
     print("updating holders...") 
 
@@ -16,12 +19,23 @@ def update_holders(all_holders_collection):
     for holder in all_holders_list:
         if compare_ids(holder['owner'], known_holders) == True: 
             try:
-                holder_json = {"_id": holder["owner"], "token_wallet_address": holder['address'], "ignored":False,  "amount": holder["amount"], "IgtShare": 0.00, "transactions": []}
+                holder_json = {"_id": holder["owner"], 
+                                "token_wallet_address": holder['address'],
+                                "ignored":False,  
+                                "amount": holder["amount"], 
+                                "igtShare": 0.00, 
+                                "igtClaimed": 0.00,
+                                "transactions": []
+                               }
                 all_holders_collection.insert_one(holder_json)
             except:
                 print("duplicate caught")
 
     print("successfully updated holders")
+
+
+
+
 
 def update_user_transactions(all_holders_collection):
     print("updating user transactions... (this may take a while)")

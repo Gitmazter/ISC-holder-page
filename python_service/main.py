@@ -21,8 +21,6 @@ def main():
     update_igt_shares(all_holders_collection, supply_collection)
 main()
 
-
-
 def update_all_txs():
     print("hello")
     ## Update all txs to new mongoDB collection and implement into update users and update transactions defs

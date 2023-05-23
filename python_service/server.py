@@ -35,7 +35,7 @@ def request_page():
     # user = user_query
     # user_balance = get_single_share(all_holders_collection, supply_collection, id=user_query)
     # data_set = '{"User": "%s" ,"IGT_balance":%s,"Timestamp":%s}' % (user, user_balance, time.time())
-
+    
     user = get_single_share(all_holders_collection, supply_collection, id=user_query)
     json_user = json.dumps(user)
     return Response(json_user)

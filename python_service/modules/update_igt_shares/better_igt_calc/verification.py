@@ -56,8 +56,7 @@ def validate_all_txs(all_transactions):
         grand_sum += block_sum
 
     print(" GRAND _ SUM ==== ", grand_sum)
-    return True
-
+    return grand_sum
 
 
 def validate_user_txs(holder_transactions):

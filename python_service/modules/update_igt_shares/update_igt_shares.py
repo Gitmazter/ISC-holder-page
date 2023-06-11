@@ -26,7 +26,7 @@ def update_igt_shares(all_holders_collection, supply_collection):
         # all_holders_collection.update_one(myquery, newvalues)
 
     all_txs = get_all_txs(all_holders_collection)
-    print("" +  str(validate_via_timestamps(all_txs)))
+    print("The grand sum of all timestamps is(should be 0 in a perfect world) : ", str(validate_via_timestamps(all_txs)))
 
     print("now 2 " + str(now))
     verify_shares(total_share, supply_arr, now)

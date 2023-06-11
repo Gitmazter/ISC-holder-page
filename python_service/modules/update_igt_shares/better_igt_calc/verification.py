@@ -13,13 +13,20 @@ def verify_shares(total_share, supply_arr, now):
     if total_share - total_igt < 1 and total_share - total_igt > -1:
         print("shares verified with a tolerance of 2 points")
 
+
+
+
+
 def validate_via_timestamps(all_transactions):
     sorted_transactions = sorted(all_transactions, key=get_time)
     are_txs_valid = validate_all_txs(sorted_transactions)
     return are_txs_valid
 
+
+
 def validate_all_txs(all_transactions):
     time_stamp_list = []
+    grand_sum = 0
 
     for tx in all_transactions:
         timestamp = tx['timeStamp']
@@ -35,8 +42,23 @@ def validate_all_txs(all_transactions):
             else:
                 return False
 
-        block_txs = filter(compare_timestamp, all_transactions)
-        print(block_txs)
+        filtered_block_txs = filter(compare_timestamp, all_transactions)
+        block_txs = list(filtered_block_txs)
+        block_sum = 0.00;
+        for tx in block_txs:
+            amount = float(tx['amount'])
+            block_sum += amount 
+
+        if block_sum == 0:
+            print('Transactions for block minded at ', str(time_stamp), ' are valid sum : ', str(block_sum))
+        else:
+             print('Transactions for block minded at ', str(time_stamp), ' are Invalid! sum : ', str(block_sum))
+        grand_sum += block_sum
+
+    print(" GRAND _ SUM ==== ", grand_sum)
+    return True
+
+
 
 def validate_user_txs(holder_transactions):
     holder_transactions.reverse()

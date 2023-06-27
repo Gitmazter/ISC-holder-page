@@ -30,7 +30,7 @@ def home_page():
     response = "igt Api is up and running, try /igtApi/user/?address=yourSolanaAddress"
     return json.dumps(response)
 
-@app.route('/igtApi/user/', method=['POST']) 
+@app.route('/igtApi/user/', methods=['GET', 'POST']) 
 @cross_origin()
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey

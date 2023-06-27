@@ -18,9 +18,8 @@ supply_collection = DB["supply"]
 
 """ FLASK STUFF """
 app = Flask(__name__)
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('flask_cors').level = logging.DEBUG
 cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.wsgi_app = ProxyFix(
     app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
 )
@@ -30,7 +29,7 @@ app.wsgi_app = ProxyFix(
 def home_page():
     data_set = '{"hallo":"world","I":"Am","Timestamp":%s}' % (time.time())
     response = Response(str(data_set))
-    return response
+    return json.dumps(response)
 
 @app.route('/user/') 
 @cross_origin()

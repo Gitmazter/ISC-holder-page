@@ -26,14 +26,14 @@ app.wsgi_app = ProxyFix(
     app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
 )
 
-@app.route('/', methods=['POST']) 
+@app.route('/') 
 @cross_origin()
 def home_page():
     data_set = '{"hallo":"world","I":"Am","Timestamp":%s}' % (time.time())
     response = Response(str(data_set))
     return response
 
-@app.route('/user/', methods=['POST']) 
+@app.route('/user/') 
 @cross_origin()
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey

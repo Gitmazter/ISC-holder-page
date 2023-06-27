@@ -20,7 +20,7 @@ supply_collection = DB["supply"]
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('flask_cors').level = logging.DEBUG
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
+cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.wsgi_app = ProxyFix(
     app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1

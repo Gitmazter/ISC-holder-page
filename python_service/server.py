@@ -4,7 +4,6 @@ from pymongo import MongoClient
 from services.settings import GET_KEY
 from flask import Flask, Response, request
 from flask_cors import CORS
-from flask_ngrok import run_with_ngrok
 import time, json, logging
 
 # GLOBAL VARS

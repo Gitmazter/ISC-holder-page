@@ -27,10 +27,10 @@ app.wsgi_app = ProxyFix(
 @app.route('/igtApi/') 
 @cross_origin()
 def home_page():
-    response = "igt Api is up and running, try /igtApi/user/&address='yourSolanaAddress'" 
+    response = "igt Api is up and running, try /igtApi/user/?address=yourSolanaAddress"
     return json.dumps(response)
 
-@app.route('/igtApi/user/') 
+@app.route('/igtApi/user/', method=['POST']) 
 @cross_origin()
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey

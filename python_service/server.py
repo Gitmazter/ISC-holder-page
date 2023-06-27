@@ -27,8 +27,7 @@ app.wsgi_app = ProxyFix(
 @app.route('/igtApi/') 
 @cross_origin()
 def home_page():
-    data_set = '{"hallo":"world","I":"Am","Timestamp":%s}' % (time.time())
-    response = Response(str(data_set))
+    response = "igt Api is up and running, try /igtApi/user/&address='yourSolanaAddress'" 
     return json.dumps(response)
 
 @app.route('/igtApi/user/') 

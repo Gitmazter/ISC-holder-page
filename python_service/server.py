@@ -3,8 +3,9 @@ from modules.update_holders.update_holders import update_single_user_txs
 from pymongo import MongoClient
 from services.settings import GET_KEY
 from flask import Flask, Response, request
-from flask_cors import CORS
+from flask_cors import CORS,cross_origin
 import time, json, logging
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # GLOBAL VARS
 MONGO_DB_URL = "mongodb+srv://"+ str(GET_KEY("MONGO_DB_UN")) + ":" + str(GET_KEY("MONGO_DB_KEY")) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
@@ -19,16 +20,21 @@ supply_collection = DB["supply"]
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('flask_cors').level = logging.DEBUG
-CORS(app, resources={r"/*": {"origins": "*"}})
-# run_with_ngrok(app)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+)
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST']) 
+@cross_origin()
 def home_page():
     data_set = '{"hallo":"world","I":"Am","Timestamp":%s}' % (time.time())
     response = Response(str(data_set))
     return response
 
 @app.route('/user/', methods=['POST']) 
+@cross_origin()
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey
 

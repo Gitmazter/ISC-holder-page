@@ -19,7 +19,7 @@ supply_collection = DB["supply"]
 
 """ FLASK STUFF """
 app = Flask(__name__)
-logging.basicConfig(filename='~/logs/holder-page.log', level=logging.DEBUG)
+logging.basicConfig(filename='holder-page.log', level=logging.DEBUG)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.wsgi_app = ProxyFix(

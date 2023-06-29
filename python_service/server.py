@@ -4,8 +4,9 @@ from pymongo import MongoClient
 from services.settings import GET_KEY
 from flask import Flask, Response, request
 from flask_cors import CORS,cross_origin
-import time, json, logging
+import json, logging, datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
+import logging
 
 # GLOBAL VARS
 MONGO_DB_URL = "mongodb+srv://"+ str(GET_KEY("MONGO_DB_UN")) + ":" + str(GET_KEY("MONGO_DB_KEY")) + "@ischost.7b510c2.mongodb.net/?retryWrites=true&w=majority"
@@ -18,6 +19,7 @@ supply_collection = DB["supply"]
 
 """ FLASK STUFF """
 app = Flask(__name__)
+logging.basicConfig(filename='~/logs/holder-page.log', level=logging.DEBUG)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.wsgi_app = ProxyFix(
@@ -34,7 +36,8 @@ def home_page():
 @cross_origin()
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey
-
+    ip_address = request.remote_addr
+    app.logger.info(f'Client pbukey: {user_query} connected from ip: {ip_address} at: {datetime.datetime()}')
     holder = all_holders_collection.find({ "_id" :  user_query })[0]
     update_single_user_txs(holder, all_holders_collection)
     get_single_share(all_holders_collection, supply_collection, id=user_query)

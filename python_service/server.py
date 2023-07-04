@@ -37,7 +37,7 @@ def home_page():
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey
     ip_address = request.remote_addr
-    app.logger.info(f'Client pbukey: {user_query} connected from ip: {ip_address} at: {datetime.datetime()}')
+    #app.logger.info(f'Client pbukey: {user_query} connected from ip: {ip_address} at: {datetime.datetime()}')
     holder = all_holders_collection.find({ "_id" :  user_query })[0]
     update_single_user_txs(holder, all_holders_collection)
     get_single_share(all_holders_collection, supply_collection, id=user_query)

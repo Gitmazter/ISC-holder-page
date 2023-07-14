@@ -68,7 +68,7 @@ def getSingleUserTokenData(id):
     uri = f"https://public-api.solscan.io/account/tokens?account={id}"
     res = requests.get(uri, headers=headers)
     userData = json.loads(res.text)
-    print(userData)
+    return userData
 
 def getAllTxs(offset):
     print("hello")

@@ -1,5 +1,6 @@
 from modules.update_igt_shares.update_igt_shares import get_single_share
 from modules.update_holders.update_holders import update_single_user_txs
+from services.solscan_getters import getSingleUserTokenData
 from pymongo import MongoClient
 from services.settings import GET_KEY
 from flask import Flask, Response, request
@@ -36,11 +37,32 @@ def home_page():
 @cross_origin()
 def request_page():
     user_query = request.args.get('address') # /user/?address=yourPubKey
-    ip_address = request.remote_addr
-    #app.logger.info(f'Client pbukey: {user_query} connected from ip: {ip_address} at: {datetime.datetime()}')
-    holder = all_holders_collection.find({ "_id" :  user_query })[0]
+    holder = {}
+    try:
+        holder = all_holders_collection.find({ "_id" :  user_query })[0]
+    except:
+        holderData = getSingleUserTokenData(id=user_query)
+        holderIscData = {}
+        for tokenAccount in holderData:
+            if tokenAccount['tokenAddress'] == "J9BcrQfX4p9D1bvLzRNCbMDv8f44a9LFdeqNE4Yk2WMD":
+                holderIscData = tokenAccount
+
+        holder_json = {
+                "_id": user_query, 
+                "token_wallet_address": holderIscData['tokenAccount'],
+                "ignored":False,  
+                "amount": holderIscData['tokenAmount']['amount'], 
+                "igtShare": 0.00, 
+                "igtClaimed": 0.00,
+                "transactions": []
+               }
+        all_holders_collection.insert_one(holder_json)
+        print('new user added')
+        
+        
     update_single_user_txs(holder, all_holders_collection)
     get_single_share(all_holders_collection, supply_collection, id=user_query)
+    print('user updated')
 
     updated_holder = all_holders_collection.find({ "_id" :  user_query })[0]
 

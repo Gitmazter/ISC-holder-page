@@ -64,6 +64,12 @@ def check_tx_data_for_mint(txData, txHash):
         except:
             return None # Gracefully handling non-mint transactions from Authority
 
+def getSingleUserTokenData(id):
+    uri = f"https://public-api.solscan.io/account/tokens?account={id}"
+    res = requests.get(uri, headers=headers)
+    userData = json.loads(res.text)
+    print(userData)
+
 def getAllTxs(offset):
     print("hello")
     ## Get all txs with offset 

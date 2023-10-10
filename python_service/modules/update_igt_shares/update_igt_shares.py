@@ -54,7 +54,8 @@ def get_single_share(all_holders_collection, supply_collection, id):
     for supply in supply_cursor_object:
         supply_arr.append(supply)
     supply_arr.reverse()
-    print('works til 2')    
+    print('works til 2')   
+    print(holder) 
     validate_user_txs(holder['transactions'])
     print('works til 3')
     share = igt_calc(holder['transactions'], supply_arr, now)

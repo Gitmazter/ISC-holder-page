@@ -47,22 +47,22 @@ def get_single_share(all_holders_collection, supply_collection, id):
     now = time.time()
     holder_cursor = all_holders_collection.find({ "_id" :  id })
     holder = holder_cursor[0]
-
+    print('works til 1')
     supply_cursor_object = supply_collection.find({})
 
     supply_arr = []
     for supply in supply_cursor_object:
         supply_arr.append(supply)
     supply_arr.reverse()
-
+    print('works til 2')    
     validate_user_txs(holder['transactions'])
-
+    print('works til 3')
     share = igt_calc(holder['transactions'], supply_arr, now)
-
+    print('works til 4')
     myquery = { "_id": holder["_id"]}
     newvalues = { "$set": { "igtShare": share } }
     all_holders_collection.update_one(myquery, newvalues)
-
+    print('works til 5')
     holder = all_holders_collection.find({ "_id" :  id })[0]
-
+    print('works til 6')
     return(holder)

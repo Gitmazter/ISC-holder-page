@@ -61,7 +61,6 @@ def request_page():
         
         
     update_single_user_txs(holder, all_holders_collection)
-    print('works til here')
     get_single_share(all_holders_collection, supply_collection, id=user_query)
     print('user updated')
 

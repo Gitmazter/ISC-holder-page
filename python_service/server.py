@@ -65,7 +65,7 @@ def request_page():
     print('user updated')
 
     updated_holder = all_holders_collection.find({ "_id" :  user_query })[0]
-    print(updated_holder['igtShare'])
+    print(updated_holder)
 
     json_holder = json.dumps(updated_holder)
     return Response(json_holder)

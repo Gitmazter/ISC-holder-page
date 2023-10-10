@@ -56,6 +56,7 @@ def get_single_share(all_holders_collection, supply_collection, id):
     supply_arr.reverse()
     print('works til 2')   
     print(holder) 
+    print(validate_user_txs(holder['transactions']))
     validate_user_txs(holder['transactions'])
     print('works til 3')
     share = igt_calc(holder['transactions'], supply_arr, now)
